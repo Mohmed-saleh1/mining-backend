@@ -102,9 +102,7 @@ export class AuthController {
   async verifyResetToken(@Body() verifyResetTokenDto: VerifyResetTokenDto) {
     const result = await this.authService.verifyResetToken(verifyResetTokenDto);
     return BaseResponseDto.success(
-      result.valid
-        ? 'Token is valid'
-        : 'Token is invalid or expired',
+      result.valid ? 'Token is valid' : 'Token is invalid or expired',
       result,
     );
   }
@@ -122,7 +120,10 @@ export class AuthController {
   })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     await this.authService.resetPassword(resetPasswordDto);
-    return BaseResponseDto.success('Password has been reset successfully', null);
+    return BaseResponseDto.success(
+      'Password has been reset successfully',
+      null,
+    );
   }
 
   @Post('verify-email')
@@ -138,7 +139,10 @@ export class AuthController {
   })
   async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
     await this.authService.verifyEmail(verifyEmailDto);
-    return BaseResponseDto.success('Email has been verified successfully', null);
+    return BaseResponseDto.success(
+      'Email has been verified successfully',
+      null,
+    );
   }
 
   @Post('resend-verification-email')
@@ -146,7 +150,8 @@ export class AuthController {
   @ApiOperation({ summary: 'Resend email verification link' })
   @ApiResponse({
     status: 200,
-    description: 'If the email exists and is not verified, a verification link has been sent',
+    description:
+      'If the email exists and is not verified, a verification link has been sent',
   })
   @ApiResponse({
     status: 400,

@@ -8,11 +8,12 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { getDatabaseConfig } from './shared';
 import { ContactUsModule } from './contact-us/contact-us.module';
+import { MiningMachinesModule } from './mining-machines/mining-machines.module';
 
 @Module({
   imports: [
-     // Configuration Module
-     ConfigModule.forRoot({
+    // Configuration Module
+    ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
       cache: true,
@@ -28,7 +29,6 @@ import { ContactUsModule } from './contact-us/contact-us.module';
 
     // Shared Module (S3, Upload Services)
     SharedModule,
- 
 
     // Auth Module
     AuthModule,
@@ -39,6 +39,8 @@ import { ContactUsModule } from './contact-us/contact-us.module';
     // Contact Us Module
     ContactUsModule,
 
+    // Mining Machines Module
+    MiningMachinesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

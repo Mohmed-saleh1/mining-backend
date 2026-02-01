@@ -27,6 +27,12 @@ export class UserResponseDto {
   isActive: boolean;
 
   @ApiProperty()
+  emailVerified: boolean;
+
+  @ApiProperty({ required: false })
+  lastLoginAt?: Date;
+
+  @ApiProperty()
   createdAt: Date;
 
   @ApiProperty()
@@ -42,6 +48,8 @@ export class UserResponseDto {
     dto.role = user.role;
     dto.avatar = user.avatar;
     dto.isActive = user.isActive;
+    dto.emailVerified = user.emailVerified;
+    dto.lastLoginAt = user.lastLoginAt;
     dto.createdAt = user.createdAt;
     dto.updatedAt = user.updatedAt;
     return dto;

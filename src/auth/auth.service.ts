@@ -99,7 +99,10 @@ export class AuthService {
     );
 
     // Send verification email
-    await this.emailService.sendEmailVerification(user.email, verificationToken);
+    await this.emailService.sendEmailVerification(
+      user.email,
+      verificationToken,
+    );
 
     const payload: JwtPayload = {
       email: user.email,
@@ -184,11 +187,15 @@ export class AuthService {
       throw new BadRequestException({
         message: 'Reset token has expired',
         errorCode: 'AUTH_004',
-        errorDescription: 'The password reset token has expired. Please request a new one.',
+        errorDescription:
+          'The password reset token has expired. Please request a new one.',
       });
     }
 
-    await this.usersService.resetPassword(user.id, resetPasswordDto.newPassword);
+    await this.usersService.resetPassword(
+      user.id,
+      resetPasswordDto.newPassword,
+    );
   }
 
   async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<void> {
@@ -211,7 +218,8 @@ export class AuthService {
       throw new BadRequestException({
         message: 'Verification token has expired',
         errorCode: 'AUTH_006',
-        errorDescription: 'The email verification token has expired. Please request a new one.',
+        errorDescription:
+          'The email verification token has expired. Please request a new one.',
       });
     }
 
@@ -246,6 +254,9 @@ export class AuthService {
     );
 
     // Send verification email
-    await this.emailService.sendEmailVerification(user.email, verificationToken);
+    await this.emailService.sendEmailVerification(
+      user.email,
+      verificationToken,
+    );
   }
 }

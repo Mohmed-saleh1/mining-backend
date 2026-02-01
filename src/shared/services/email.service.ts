@@ -15,7 +15,8 @@ export class EmailService {
     this.frontendUrl =
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
     this.fromEmail =
-      this.configService.get<string>('EMAIL_FROM') || 'LOGIM <noreply@logim.com>';
+      this.configService.get<string>('EMAIL_FROM') ||
+      'LOGIM <noreply@logim.com>';
   }
 
   private getBaseEmailTemplate(content: string): string {
@@ -165,7 +166,9 @@ export class EmailService {
       });
 
       if (error) {
-        this.logger.error(`Failed to send verification email: ${error.message}`);
+        this.logger.error(
+          `Failed to send verification email: ${error.message}`,
+        );
         throw new Error(`Failed to send email: ${error.message}`);
       }
 
@@ -254,7 +257,9 @@ export class EmailService {
       });
 
       if (error) {
-        this.logger.error(`Failed to send password reset email: ${error.message}`);
+        this.logger.error(
+          `Failed to send password reset email: ${error.message}`,
+        );
         throw new Error(`Failed to send email: ${error.message}`);
       }
 
