@@ -25,6 +25,7 @@ import {
   UpdateProfileDto,
   ChangePasswordDto,
   UserResponseDto,
+  SeedAdminDto,
 } from './dto';
 import { BaseResponseDto } from '../shared/dto/base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -36,6 +37,29 @@ import { UserRole } from './entities/user.entity';
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
+
+  @Post('seed-admin')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Seed admin user',
+    description: 'Create an admin user for initial setup. This endpoint is publicly accessible and should be used only for seeding the first admin account.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Admin user created successfully',
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Admin user with this email already exists',
+  })
+  async seedAdmin(@Body() seedAdminDto: SeedAdminDto) {
+    const admin = await this.usersService.seedAdmin(seedAdminDto);
+    return BaseResponseDto.success(
+      'Admin user created successfully. You can now login with these credentials.',
+      admin,
+    );
+  }
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)

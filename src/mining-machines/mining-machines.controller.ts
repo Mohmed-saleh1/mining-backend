@@ -24,6 +24,7 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { MachineStatus } from './entities/mining-machine.entity';
+import { BaseResponseDto } from '../shared/dto/base-response.dto';
 
 @ApiTags('Mining Machines')
 @Controller('mining-machines')
@@ -38,8 +39,9 @@ export class MiningMachinesController {
     status: 200,
     description: 'Returns all active and available mining machines',
   })
-  getPublicMachines() {
-    return this.miningMachinesService.getPublicMachines();
+  async getPublicMachines() {
+    const machines = await this.miningMachinesService.getPublicMachines();
+    return BaseResponseDto.success('Public mining machines retrieved successfully', machines);
   }
 
   @Get('featured')
@@ -48,8 +50,9 @@ export class MiningMachinesController {
     status: 200,
     description: 'Returns all featured mining machines',
   })
-  getFeaturedMachines() {
-    return this.miningMachinesService.getFeaturedMachines();
+  async getFeaturedMachines() {
+    const machines = await this.miningMachinesService.getFeaturedMachines();
+    return BaseResponseDto.success('Featured mining machines retrieved successfully', machines);
   }
 
   @Get('public/:id')
@@ -59,8 +62,9 @@ export class MiningMachinesController {
     description: 'Returns the mining machine details',
   })
   @ApiResponse({ status: 404, description: 'Mining machine not found' })
-  findOnePublic(@Param('id', ParseUUIDPipe) id: string) {
-    return this.miningMachinesService.findOne(id);
+  async findOnePublic(@Param('id', ParseUUIDPipe) id: string) {
+    const machine = await this.miningMachinesService.findOne(id);
+    return BaseResponseDto.success('Mining machine retrieved successfully', machine);
   }
 
   // ============ ADMIN ENDPOINTS ============
@@ -76,8 +80,9 @@ export class MiningMachinesController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
-  create(@Body() createMiningMachineDto: CreateMiningMachineDto) {
-    return this.miningMachinesService.create(createMiningMachineDto);
+  async create(@Body() createMiningMachineDto: CreateMiningMachineDto) {
+    const machine = await this.miningMachinesService.create(createMiningMachineDto);
+    return BaseResponseDto.success('Mining machine created successfully', machine);
   }
 
   @Get()
@@ -93,7 +98,7 @@ export class MiningMachinesController {
     status: 200,
     description: 'Returns all mining machines',
   })
-  findAll(
+ async findAll(
     @Query('isActive') isActive?: string,
     @Query('isFeatured') isFeatured?: string,
     @Query('type') type?: string,
@@ -119,7 +124,8 @@ export class MiningMachinesController {
       options.status = status;
     }
 
-    return this.miningMachinesService.findAll(options);
+    const machines = await this.miningMachinesService.findAll(options);
+    return BaseResponseDto.success('Mining machines retrieved successfully', machines);
   }
 
   @Get(':id')

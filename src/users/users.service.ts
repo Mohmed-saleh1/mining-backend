@@ -13,7 +13,9 @@ import {
   UpdateProfileDto,
   ChangePasswordDto,
   UserResponseDto,
+  SeedAdminDto,
 } from './dto';
+import { UserRole } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
@@ -183,5 +185,32 @@ export class UsersService {
     return this.userRepository.findOne({
       where: { emailVerificationToken: token },
     });
+  }
+
+  async seedAdmin(seedAdminDto: SeedAdminDto): Promise<UserResponseDto> {
+    // Check if admin with this email already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { email: seedAdminDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException({
+        message: 'Admin user with this email already exists',
+        errorCode: 'USER_001',
+        errorDescription: `An admin user with email '${seedAdminDto.email}' already exists`,
+      });
+    }
+
+    // Create admin user with all necessary fields set
+    const adminUser = this.userRepository.create({
+      ...seedAdminDto,
+      role: UserRole.ADMIN,
+      emailVerified: true,
+      isActive: true,
+    });
+
+    const savedAdmin: User = await this.userRepository.save(adminUser);
+
+    return UserResponseDto.fromEntity(savedAdmin);
   }
 }
