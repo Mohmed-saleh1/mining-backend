@@ -17,6 +17,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { CreateVerifiedUserDto } from './dto/create-verified-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyResetTokenDto } from './dto/verify-reset-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -162,6 +163,28 @@ export class AuthController {
     return BaseResponseDto.success(
       'If the email exists and is not verified, a verification link has been sent to your email',
       null,
+    );
+  }
+
+  @Post('create-verified-user')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Create a verified user ready to login',
+    description: 'Create a new user with email verified and active status. Useful for development/testing. Returns user data and access token.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Verified user created successfully',
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'User with this email already exists',
+  })
+  async createVerifiedUser(@Body() createVerifiedUserDto: CreateVerifiedUserDto) {
+    const result = await this.authService.createVerifiedUser(createVerifiedUserDto);
+    return BaseResponseDto.success(
+      'Verified user created successfully. You can now login with these credentials.',
+      result,
     );
   }
 }

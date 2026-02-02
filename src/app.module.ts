@@ -9,6 +9,7 @@ import { UsersModule } from './users/users.module';
 import { getDatabaseConfig } from './shared';
 import { ContactUsModule } from './contact-us/contact-us.module';
 import { MiningMachinesModule } from './mining-machines/mining-machines.module';
+import { WalletsModule } from './wallets/wallets.module';
 
 @Module({
   imports: [
@@ -41,6 +42,9 @@ import { MiningMachinesModule } from './mining-machines/mining-machines.module';
 
     // Mining Machines Module
     MiningMachinesModule,
+
+    // Wallets Module
+    WalletsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

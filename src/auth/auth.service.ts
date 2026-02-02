@@ -3,12 +3,16 @@ import {
   UnauthorizedException,
   NotFoundException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { EmailService } from '../shared/services/email.service';
+import { WalletsService } from '../wallets/wallets.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { CreateVerifiedUserDto } from './dto/create-verified-user.dto';
 import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { VerifyResetTokenDto } from './dto/verify-reset-token.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -29,6 +33,8 @@ export class AuthService {
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
     private readonly emailService: EmailService,
+    @Inject(forwardRef(() => WalletsService))
+    private readonly walletsService: WalletsService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<User | null> {
@@ -86,6 +92,9 @@ export class AuthService {
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
     const user = await this.usersService.create(registerDto);
+
+    // Initialize wallets for the new user
+    await this.walletsService.initializeWalletsForUser(user.id);
 
     // Generate email verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
@@ -258,5 +267,26 @@ export class AuthService {
       user.email,
       verificationToken,
     );
+  }
+
+  async createVerifiedUser(createVerifiedUserDto: CreateVerifiedUserDto): Promise<AuthResponse> {
+    // Create verified user (emailVerified = true, isActive = true)
+    const user = await this.usersService.createVerifiedUser(createVerifiedUserDto);
+
+    // Initialize wallets for the new user
+    await this.walletsService.initializeWalletsForUser(user.id);
+
+    const payload: JwtPayload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      user,
+      accessToken,
+    };
   }
 }

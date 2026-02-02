@@ -213,4 +213,29 @@ export class UsersService {
 
     return UserResponseDto.fromEntity(savedAdmin);
   }
+
+  async createVerifiedUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+    const existingUser = await this.userRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException({
+        message: 'User with this email already exists',
+        errorCode: 'USER_001',
+        errorDescription: `A user with email '${createUserDto.email}' already exists`,
+      });
+    }
+
+    // Create user with verified email and active status
+    const user = this.userRepository.create({
+      ...createUserDto,
+      emailVerified: true,
+      isActive: true,
+    });
+
+    const savedUser = await this.userRepository.save(user);
+
+    return UserResponseDto.fromEntity(savedUser);
+  }
 }
