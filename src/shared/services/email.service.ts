@@ -16,7 +16,7 @@ export class EmailService {
       this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
     this.fromEmail =
       this.configService.get<string>('EMAIL_FROM') ||
-      'LOGIM <noreply@logim.com>';
+      'x-bin <noreply@x-bin.com>';
   }
 
   private getBaseEmailTemplate(content: string): string {
@@ -26,7 +26,7 @@ export class EmailService {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LOGIM</title>
+  <title>X-BIN</title>
 </head>
 <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0a0a0f;">
   <table role="presentation" style="width: 100%; border-collapse: collapse; background: linear-gradient(180deg, #0a0a0f 0%, #12121a 100%);">
@@ -44,7 +44,7 @@ export class EmailService {
                     </div>
                   </td>
                   <td>
-                    <span style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 2px;">LOGIM</span>
+                    <span style="font-size: 28px; font-weight: 700; color: #ffffff; letter-spacing: 2px;">X-BIN</span>
                   </td>
                 </tr>
               </table>
@@ -67,7 +67,7 @@ export class EmailService {
                   <td align="center">
                     <p style="margin: 0 0 15px 0; color: #d4a650; font-size: 14px; font-weight: 600;">Secure Your Financial Future</p>
                     <p style="margin: 0 0 20px 0; color: #6b6b7b; font-size: 12px;">
-                      This email was sent by LOGIM Mining Platform.<br>
+                      This email was sent by X-BIN Mining Platform.<br>
                       If you didn't request this, please ignore this email.
                     </p>
                     <table role="presentation" style="border-collapse: collapse;">
@@ -86,7 +86,7 @@ export class EmailService {
                       </tr>
                     </table>
                     <p style="margin: 20px 0 0 0; color: #4a4a5a; font-size: 11px;">
-                      © ${new Date().getFullYear()} LOGIM. All rights reserved.
+                      © ${new Date().getFullYear()} X-BIN. All rights reserved.
                     </p>
                   </td>
                 </tr>
@@ -118,7 +118,7 @@ export class EmailService {
           <td align="center">
             <h1 style="margin: 0 0 10px 0; color: #ffffff; font-size: 26px; font-weight: 700;">Verify Your Email</h1>
             <p style="margin: 0 0 30px 0; color: #a0a0a0; font-size: 16px; line-height: 1.6;">
-              Welcome to LOGIM! Please verify your email address to start earning crypto profits daily.
+              Welcome to X-BIN! Please verify your email address to start earning crypto profits daily.
             </p>
           </td>
         </tr>
@@ -161,7 +161,7 @@ export class EmailService {
       const { data, error } = await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
-        subject: '✉️ Verify Your Email - LOGIM',
+        subject: '✉️ Verify Your Email - X-BIN',
         html,
       });
 
@@ -195,7 +195,7 @@ export class EmailService {
           <td align="center">
             <h1 style="margin: 0 0 10px 0; color: #ffffff; font-size: 26px; font-weight: 700;">Reset Your Password</h1>
             <p style="margin: 0 0 30px 0; color: #a0a0a0; font-size: 16px; line-height: 1.6;">
-              We received a request to reset your password. Click the button below to create a new password for your LOGIM account.
+              We received a request to reset your password. Click the button below to create a new password for your X-BIN account.
             </p>
           </td>
         </tr>
@@ -252,7 +252,7 @@ export class EmailService {
       const { data, error } = await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
-        subject: '🔐 Reset Your Password - LOGIM',
+        subject: '🔐 Reset Your Password - X-BIN',
         html,
       });
 

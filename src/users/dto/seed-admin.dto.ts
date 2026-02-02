@@ -51,3 +51,4 @@ export class SeedAdminDto {
   @IsString()
   phone?: string;
 }
+

@@ -219,3 +219,4 @@ export class MiningMachinesController {
     return this.miningMachinesService.updateStatus(id, status);
   }
 }
+
