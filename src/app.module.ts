@@ -10,6 +10,7 @@ import { getDatabaseConfig } from './shared';
 import { ContactUsModule } from './contact-us/contact-us.module';
 import { MiningMachinesModule } from './mining-machines/mining-machines.module';
 import { WalletsModule } from './wallets/wallets.module';
+import { BookingsModule } from './bookings/bookings.module';
 
 @Module({
   imports: [
@@ -45,6 +46,9 @@ import { WalletsModule } from './wallets/wallets.module';
 
     // Wallets Module
     WalletsModule,
+
+    // Bookings Module
+    BookingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
