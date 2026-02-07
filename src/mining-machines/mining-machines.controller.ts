@@ -9,6 +9,8 @@ import {
   UseGuards,
   Query,
   ParseUUIDPipe,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,7 +18,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { MiningMachinesService } from './mining-machines.service';
 import { CreateMiningMachineDto, UpdateMiningMachineDto } from './dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -25,11 +29,16 @@ import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { MachineStatus } from './entities/mining-machine.entity';
 import { BaseResponseDto } from '../shared/dto/base-response.dto';
+import { UploadService } from '../shared/services/upload.service';
+import { ParseFormDataPipe } from '../shared/pipes/parse-form-data.pipe';
 
 @ApiTags('Mining Machines')
 @Controller('mining-machines')
 export class MiningMachinesController {
-  constructor(private readonly miningMachinesService: MiningMachinesService) {}
+  constructor(
+    private readonly miningMachinesService: MiningMachinesService,
+    private readonly uploadService: UploadService,
+  ) {}
 
   // ============ PUBLIC ENDPOINTS ============
 
@@ -73,6 +82,8 @@ export class MiningMachinesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new mining machine (Admin only)' })
   @ApiResponse({
     status: 201,
@@ -80,7 +91,16 @@ export class MiningMachinesController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden - Admin only' })
-  async create(@Body() createMiningMachineDto: CreateMiningMachineDto) {
+  async create(
+    @Body(ParseFormDataPipe) createMiningMachineDto: CreateMiningMachineDto,
+    @UploadedFile() image?: Express.Multer.File,
+  ) {
+    // Upload image if provided
+    if (image) {
+      const imageUrl = await this.uploadService.uploadImage(image, 'machines');
+      createMiningMachineDto.image = imageUrl;
+    }
+
     const machine = await this.miningMachinesService.create(createMiningMachineDto);
     return BaseResponseDto.success('Mining machine created successfully', machine);
   }
@@ -146,17 +166,38 @@ export class MiningMachinesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
   @ApiBearerAuth()
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Update a mining machine (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'Mining machine updated successfully',
   })
   @ApiResponse({ status: 404, description: 'Mining machine not found' })
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() updateMiningMachineDto: UpdateMiningMachineDto,
+    @Body(ParseFormDataPipe) updateMiningMachineDto: UpdateMiningMachineDto,
+    @UploadedFile() image?: Express.Multer.File,
   ) {
-    return this.miningMachinesService.update(id, updateMiningMachineDto);
+    // Upload new image if provided
+    if (image) {
+      const machine = await this.miningMachinesService.findOne(id);
+      // Delete old image if exists
+      if (machine.image) {
+        try {
+          await this.uploadService.deleteImageByUrl(machine.image);
+        } catch (error) {
+          // Log error but don't fail the update
+          console.error('Failed to delete old image:', error);
+        }
+      }
+      // Upload new image
+      const imageUrl = await this.uploadService.uploadImage(image, 'machines');
+      updateMiningMachineDto.image = imageUrl;
+    }
+
+    const machine = await this.miningMachinesService.update(id, updateMiningMachineDto);
+    return BaseResponseDto.success('Mining machine updated successfully', machine);
   }
 
   @Delete(':id')

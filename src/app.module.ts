@@ -11,6 +11,7 @@ import { ContactUsModule } from './contact-us/contact-us.module';
 import { MiningMachinesModule } from './mining-machines/mining-machines.module';
 import { WalletsModule } from './wallets/wallets.module';
 import { BookingsModule } from './bookings/bookings.module';
+import { LegalDocumentsModule } from './legal-documents/legal-documents.module';
 
 @Module({
   imports: [
@@ -49,6 +50,9 @@ import { BookingsModule } from './bookings/bookings.module';
 
     // Bookings Module
     BookingsModule,
+
+    // Legal Documents Module
+    LegalDocumentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
