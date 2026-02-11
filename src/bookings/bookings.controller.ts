@@ -86,6 +86,23 @@ export class BookingsController {
     };
   }
 
+  @Get('my-bookings/analytics')
+  @ApiOperation({ summary: 'Get booking analytics for current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Analytics retrieved successfully',
+  })
+  async getMyBookingsAnalytics(@CurrentUser() user: RequestUser) {
+    const data = await this.bookingsService.getUserAnalytics(user.userId);
+
+    return {
+      success: true,
+      data,
+      message: 'Analytics retrieved successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get('my-bookings/:id')
   @ApiOperation({ summary: 'Get a specific booking for current user' })
   @ApiResponse({
@@ -241,23 +258,6 @@ export class BookingsController {
       success: true,
       data: { count },
       message: 'Unread count retrieved',
-      timestamp: new Date().toISOString(),
-    };
-  }
-
-  @Get('my-bookings/analytics')
-  @ApiOperation({ summary: 'Get booking analytics for current user' })
-  @ApiResponse({
-    status: 200,
-    description: 'Analytics retrieved successfully',
-  })
-  async getMyBookingsAnalytics(@CurrentUser() user: RequestUser) {
-    const data = await this.bookingsService.getUserAnalytics(user.userId);
-
-    return {
-      success: true,
-      data,
-      message: 'Analytics retrieved successfully',
       timestamp: new Date().toISOString(),
     };
   }
