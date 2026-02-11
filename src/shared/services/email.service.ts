@@ -108,48 +108,45 @@ export class EmailService {
     const content = `
       <table role="presentation" style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td align="center" style="padding-bottom: 30px;">
-            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, rgba(212, 166, 80, 0.2) 0%, rgba(244, 208, 63, 0.1) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #d4a650;">
-              <span style="font-size: 40px;">✉️</span>
+          <td align="center" style="padding-bottom: 40px;">
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(212, 166, 80, 0.25) 0%, rgba(244, 208, 63, 0.15) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid #d4a650; box-shadow: 0 8px 25px rgba(212, 166, 80, 0.3);">
+              <span style="font-size: 48px;">✉️</span>
             </div>
           </td>
         </tr>
         <tr>
           <td align="center">
-            <h1 style="margin: 0 0 10px 0; color: #ffffff; font-size: 26px; font-weight: 700;">Verify Your Email</h1>
-            <p style="margin: 0 0 30px 0; color: #a0a0a0; font-size: 16px; line-height: 1.6;">
-              Welcome to X-BIN! Please verify your email address to start earning crypto profits daily.
+            <h1 style="margin: 0 0 15px 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">Verify Your Email</h1>
+            <p style="margin: 0 0 40px 0; color: #b0b0c0; font-size: 17px; line-height: 1.7; max-width: 480px;">
+              Welcome to <span style="color: #d4a650; font-weight: 600;">X-BIN</span>! Please verify your email address to activate your account and start earning crypto profits daily.
             </p>
           </td>
         </tr>
         <tr>
-          <td align="center" style="padding: 20px 0;">
-            <a href="${verificationUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #d4a650 0%, #f4d03f 100%); color: #0a0a0f; text-decoration: none; font-size: 16px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 15px rgba(212, 166, 80, 0.4);">
-              Verify Email Address
+          <td align="center" style="padding: 30px 0 40px 0;">
+            <a href="${verificationUrl}" style="display: inline-block; padding: 18px 48px; background: linear-gradient(135deg, #d4a650 0%, #f4d03f 100%); color: #0a0a0f; text-decoration: none; font-size: 17px; font-weight: 700; border-radius: 12px; box-shadow: 0 6px 20px rgba(212, 166, 80, 0.5), 0 2px 8px rgba(212, 166, 80, 0.3); transition: all 0.3s ease; letter-spacing: 0.3px;">
+              Verify Email Address →
             </a>
           </td>
         </tr>
         <tr>
-          <td align="center" style="padding-top: 30px;">
-            <p style="margin: 0; color: #6b6b7b; font-size: 13px;">
-              Or copy and paste this link in your browser:
-            </p>
-            <p style="margin: 10px 0 0 0; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid #2a2a3e;">
-              <a href="${verificationUrl}" style="color: #d4a650; text-decoration: none; font-size: 12px; word-break: break-all;">${verificationUrl}</a>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td align="center" style="padding-top: 30px;">
-            <table role="presentation" style="border-collapse: collapse; background: rgba(212, 166, 80, 0.1); border-radius: 8px; border: 1px solid rgba(212, 166, 80, 0.2);">
+          <td align="center" style="padding-top: 20px;">
+            <table role="presentation" style="border-collapse: collapse; background: linear-gradient(135deg, rgba(212, 166, 80, 0.12) 0%, rgba(244, 208, 63, 0.08) 100%); border-radius: 12px; border: 1px solid rgba(212, 166, 80, 0.25); box-shadow: 0 4px 12px rgba(212, 166, 80, 0.15);">
               <tr>
-                <td style="padding: 15px 20px;">
-                  <p style="margin: 0; color: #d4a650; font-size: 13px;">
-                    ⏰ This link will expire in <strong>24 hours</strong>
+                <td style="padding: 18px 24px;">
+                  <p style="margin: 0; color: #d4a650; font-size: 14px; font-weight: 500;">
+                    ⏰ <strong>Important:</strong> This verification link will expire in <strong style="color: #f4d03f;">24 hours</strong>
                   </p>
                 </td>
               </tr>
             </table>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding-top: 35px;">
+            <p style="margin: 0; color: #6b6b7b; font-size: 13px; line-height: 1.6;">
+              If the button doesn't work, please contact our support team for assistance.
+            </p>
           </td>
         </tr>
       </table>
@@ -204,44 +201,34 @@ export class EmailService {
     const content = `
       <table role="presentation" style="width: 100%; border-collapse: collapse;">
         <tr>
-          <td align="center" style="padding-bottom: 30px;">
-            <div style="width: 80px; height: 80px; background: linear-gradient(135deg, rgba(212, 166, 80, 0.2) 0%, rgba(244, 208, 63, 0.1) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 2px solid #d4a650;">
-              <span style="font-size: 40px;">🔐</span>
+          <td align="center" style="padding-bottom: 40px;">
+            <div style="width: 100px; height: 100px; background: linear-gradient(135deg, rgba(212, 166, 80, 0.25) 0%, rgba(244, 208, 63, 0.15) 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid #d4a650; box-shadow: 0 8px 25px rgba(212, 166, 80, 0.3);">
+              <span style="font-size: 48px;">🔐</span>
             </div>
           </td>
         </tr>
         <tr>
           <td align="center">
-            <h1 style="margin: 0 0 10px 0; color: #ffffff; font-size: 26px; font-weight: 700;">Reset Your Password</h1>
-            <p style="margin: 0 0 30px 0; color: #a0a0a0; font-size: 16px; line-height: 1.6;">
-              We received a request to reset your password. Click the button below to create a new password for your X-BIN account.
+            <h1 style="margin: 0 0 15px 0; color: #ffffff; font-size: 32px; font-weight: 700; letter-spacing: -0.5px;">Reset Your Password</h1>
+            <p style="margin: 0 0 40px 0; color: #b0b0c0; font-size: 17px; line-height: 1.7; max-width: 480px;">
+              We received a request to reset your password for your <span style="color: #d4a650; font-weight: 600;">X-BIN</span> account. Click the button below to create a new secure password.
             </p>
           </td>
         </tr>
         <tr>
-          <td align="center" style="padding: 20px 0;">
-            <a href="${resetUrl}" style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #d4a650 0%, #f4d03f 100%); color: #0a0a0f; text-decoration: none; font-size: 16px; font-weight: 700; border-radius: 8px; box-shadow: 0 4px 15px rgba(212, 166, 80, 0.4);">
-              Reset Password
+          <td align="center" style="padding: 30px 0 40px 0;">
+            <a href="${resetUrl}" style="display: inline-block; padding: 18px 48px; background: linear-gradient(135deg, #d4a650 0%, #f4d03f 100%); color: #0a0a0f; text-decoration: none; font-size: 17px; font-weight: 700; border-radius: 12px; box-shadow: 0 6px 20px rgba(212, 166, 80, 0.5), 0 2px 8px rgba(212, 166, 80, 0.3); transition: all 0.3s ease; letter-spacing: 0.3px;">
+              Reset Password →
             </a>
           </td>
         </tr>
         <tr>
-          <td align="center" style="padding-top: 30px;">
-            <p style="margin: 0; color: #6b6b7b; font-size: 13px;">
-              Or copy and paste this link in your browser:
-            </p>
-            <p style="margin: 10px 0 0 0; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid #2a2a3e;">
-              <a href="${resetUrl}" style="color: #d4a650; text-decoration: none; font-size: 12px; word-break: break-all;">${resetUrl}</a>
-            </p>
-          </td>
-        </tr>
-        <tr>
-          <td align="center" style="padding-top: 30px;">
-            <table role="presentation" style="border-collapse: collapse; background: rgba(212, 166, 80, 0.1); border-radius: 8px; border: 1px solid rgba(212, 166, 80, 0.2);">
+          <td align="center" style="padding-top: 20px;">
+            <table role="presentation" style="border-collapse: collapse; background: linear-gradient(135deg, rgba(212, 166, 80, 0.12) 0%, rgba(244, 208, 63, 0.08) 100%); border-radius: 12px; border: 1px solid rgba(212, 166, 80, 0.25); box-shadow: 0 4px 12px rgba(212, 166, 80, 0.15);">
               <tr>
-                <td style="padding: 15px 20px;">
-                  <p style="margin: 0; color: #d4a650; font-size: 13px;">
-                    ⏰ This link will expire in <strong>1 hour</strong>
+                <td style="padding: 18px 24px;">
+                  <p style="margin: 0; color: #d4a650; font-size: 14px; font-weight: 500;">
+                    ⏰ <strong>Important:</strong> This reset link will expire in <strong style="color: #f4d03f;">1 hour</strong>
                   </p>
                 </td>
               </tr>
@@ -250,16 +237,23 @@ export class EmailService {
         </tr>
         <tr>
           <td align="center" style="padding-top: 25px;">
-            <table role="presentation" style="border-collapse: collapse; background: rgba(255, 100, 100, 0.1); border-radius: 8px; border: 1px solid rgba(255, 100, 100, 0.2);">
+            <table role="presentation" style="border-collapse: collapse; background: linear-gradient(135deg, rgba(255, 100, 100, 0.12) 0%, rgba(255, 120, 120, 0.08) 100%); border-radius: 12px; border: 1px solid rgba(255, 100, 100, 0.25); box-shadow: 0 4px 12px rgba(255, 100, 100, 0.15);">
               <tr>
-                <td style="padding: 15px 20px;">
-                  <p style="margin: 0; color: #ff9999; font-size: 13px;">
-                    🔒 If you didn't request this, please ignore this email.<br>
-                    <span style="font-size: 12px; color: #997777;">Your account remains secure.</span>
+                <td style="padding: 18px 24px;">
+                  <p style="margin: 0; color: #ff9999; font-size: 14px; font-weight: 500;">
+                    🔒 <strong>Security Notice:</strong> If you didn't request this password reset, please ignore this email.<br>
+                    <span style="font-size: 13px; color: #cc8888; font-weight: 400;">Your account remains secure and no changes have been made.</span>
                   </p>
                 </td>
               </tr>
             </table>
+          </td>
+        </tr>
+        <tr>
+          <td align="center" style="padding-top: 35px;">
+            <p style="margin: 0; color: #6b6b7b; font-size: 13px; line-height: 1.6;">
+              If the button doesn't work, please contact our support team for assistance.
+            </p>
           </td>
         </tr>
       </table>
