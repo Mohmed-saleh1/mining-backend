@@ -10,6 +10,7 @@ import {
   Request,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -26,6 +27,7 @@ import {
   ChangePasswordDto,
   UserResponseDto,
   SeedAdminDto,
+  SeedManagerDto,
 } from './dto';
 import { BaseResponseDto } from '../shared/dto/base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -62,13 +64,53 @@ export class UsersController {
     );
   }
 
+  @Post('seed-manager')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Seed manager user',
+    description:
+      'Create a manager user for initial setup. This endpoint is publicly accessible and should be used only for seeding the first manager account.',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Manager user created successfully',
+    type: UserResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Manager user with this email already exists',
+  })
+  async seedManager(@Body() seedManagerDto: SeedManagerDto) {
+    const manager = await this.usersService.seedManager(seedManagerDto);
+    return BaseResponseDto.success(
+      'Manager user created successfully. You can now login with these credentials.',
+      manager,
+    );
+  }
+
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create a new user (Admin only)' })
+  @ApiOperation({ summary: 'Create a new user (Admin/Manager only)' })
   @ApiResponse({ status: 201, description: 'User created successfully' })
-  async create(@Body() createUserDto: CreateUserDto) {
+  async create(
+    @Request() req: { user: { role: UserRole } },
+    @Body() createUserDto: CreateUserDto,
+  ) {
+    // Managers can only create admin users
+    if (req.user.role === UserRole.MANAGER) {
+      if (createUserDto.role && createUserDto.role !== UserRole.ADMIN) {
+        throw new BadRequestException({
+          message: 'Managers can only create admin users',
+          errorCode: 'USER_003',
+          errorDescription: 'Managers are only allowed to create users with admin role',
+        });
+      }
+      // Force role to ADMIN if manager is creating
+      createUserDto.role = UserRole.ADMIN;
+    }
+
     const user = await this.usersService.create(createUserDto);
     return BaseResponseDto.success('User created successfully', user);
   }

@@ -14,6 +14,7 @@ import {
   ChangePasswordDto,
   UserResponseDto,
   SeedAdminDto,
+  SeedManagerDto,
 } from './dto';
 import { UserRole } from './entities/user.entity';
 
@@ -212,6 +213,33 @@ export class UsersService {
     const savedAdmin: User = await this.userRepository.save(adminUser);
 
     return UserResponseDto.fromEntity(savedAdmin);
+  }
+
+  async seedManager(seedManagerDto: SeedManagerDto): Promise<UserResponseDto> {
+    // Check if manager with this email already exists
+    const existingUser = await this.userRepository.findOne({
+      where: { email: seedManagerDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException({
+        message: 'Manager user with this email already exists',
+        errorCode: 'USER_001',
+        errorDescription: `A manager user with email '${seedManagerDto.email}' already exists`,
+      });
+    }
+
+    // Create manager user with all necessary fields set
+    const managerUser = this.userRepository.create({
+      ...seedManagerDto,
+      role: UserRole.MANAGER,
+      emailVerified: true,
+      isActive: true,
+    });
+
+    const savedManager = await this.userRepository.save(managerUser);
+
+    return UserResponseDto.fromEntity(savedManager);
   }
 
   async createVerifiedUser(

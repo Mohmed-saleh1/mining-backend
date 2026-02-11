@@ -3,3 +3,4 @@ export * from './update-user.dto';
 export * from './update-profile.dto';
 export * from './user-response.dto';
 export * from './seed-admin.dto';
+export * from './seed-manager.dto';
