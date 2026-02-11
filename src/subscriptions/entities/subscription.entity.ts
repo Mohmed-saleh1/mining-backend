@@ -18,6 +18,11 @@ export enum SubscriptionStatus {
   CANCELLED = 'cancelled',
 }
 
+export enum PaymentMethod {
+  PAYTABS = 'paytabs',
+  BINANCE = 'binance',
+}
+
 @Entity('subscriptions')
 export class Subscription {
   @PrimaryGeneratedColumn('uuid')
@@ -30,12 +35,25 @@ export class Subscription {
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @Column({ name: 'plan_id' })
+  @Column({ name: 'plan_id', nullable: true })
   planId: string;
 
-  @ManyToOne(() => SubscriptionPlan, { onDelete: 'CASCADE' })
+  @ManyToOne(() => SubscriptionPlan, { onDelete: 'SET NULL', nullable: true })
   @JoinColumn({ name: 'plan_id' })
   plan: SubscriptionPlan;
+
+  @Column({
+    type: 'enum',
+    enum: ['day', 'week', 'month', 'year'],
+    nullable: true,
+  })
+  duration: string;
+
+  @Column({ type: 'int', nullable: true })
+  durationNumber: number;
+
+  @Column({ type: 'int', default: 1 })
+  quantity: number;
 
   @Column({ name: 'machine_id' })
   machineId: string;
@@ -54,11 +72,24 @@ export class Subscription {
   @Column({ type: 'decimal', precision: 10, scale: 2 })
   amount: number;
 
+  @Column({
+    type: 'enum',
+    enum: PaymentMethod,
+    default: PaymentMethod.PAYTABS,
+  })
+  paymentMethod: PaymentMethod;
+
   @Column({ nullable: true })
   paytabsTransactionId: string;
 
   @Column({ nullable: true })
   paytabsPaymentId: string;
+
+  @Column({ nullable: true })
+  binanceOrderId: string;
+
+  @Column({ nullable: true })
+  binancePrepayId: string;
 
   @Column({ type: 'timestamp', nullable: true })
   startDate: Date;
@@ -78,4 +109,3 @@ export class Subscription {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

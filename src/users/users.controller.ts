@@ -42,7 +42,8 @@ export class UsersController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Seed admin user',
-    description: 'Create an admin user for initial setup. This endpoint is publicly accessible and should be used only for seeding the first admin account.',
+    description:
+      'Create an admin user for initial setup. This endpoint is publicly accessible and should be used only for seeding the first admin account.',
   })
   @ApiResponse({
     status: 201,

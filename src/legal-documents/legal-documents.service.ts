@@ -6,10 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { LegalDocument, DocumentType } from './entities/legal-document.entity';
-import {
-  CreateLegalDocumentDto,
-  UpdateLegalDocumentDto,
-} from './dto';
+import { CreateLegalDocumentDto, UpdateLegalDocumentDto } from './dto';
 
 @Injectable()
 export class LegalDocumentsService {
@@ -18,7 +15,9 @@ export class LegalDocumentsService {
     private readonly legalDocumentRepository: Repository<LegalDocument>,
   ) {}
 
-  async create(createLegalDocumentDto: CreateLegalDocumentDto): Promise<LegalDocument> {
+  async create(
+    createLegalDocumentDto: CreateLegalDocumentDto,
+  ): Promise<LegalDocument> {
     // Check if document of this type already exists
     const existing = await this.legalDocumentRepository.findOne({
       where: { type: createLegalDocumentDto.type },
@@ -30,7 +29,9 @@ export class LegalDocumentsService {
       );
     }
 
-    const document = this.legalDocumentRepository.create(createLegalDocumentDto);
+    const document = this.legalDocumentRepository.create(
+      createLegalDocumentDto,
+    );
     return await this.legalDocumentRepository.save(document);
   }
 
@@ -87,4 +88,3 @@ export class LegalDocumentsService {
     await this.legalDocumentRepository.remove(document);
   }
 }
-

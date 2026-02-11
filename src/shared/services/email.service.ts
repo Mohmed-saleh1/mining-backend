@@ -158,8 +158,10 @@ export class EmailService {
     const html = this.getBaseEmailTemplate(content);
 
     try {
-      this.logger.debug(`Attempting to send verification email to ${email} from ${this.fromEmail}`);
-      
+      this.logger.debug(
+        `Attempting to send verification email to ${email} from ${this.fromEmail}`,
+      );
+
       const { data, error } = await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
@@ -171,23 +173,27 @@ export class EmailService {
         this.logger.error(
           `Failed to send verification email to ${email}: ${JSON.stringify(error)}`,
         );
-        throw new Error(`Failed to send email: ${error.message || JSON.stringify(error)}`);
+        throw new Error(
+          `Failed to send email: ${error.message || JSON.stringify(error)}`,
+        );
       }
 
       this.logger.log(
         `Verification email sent to ${email}, ID: ${data?.id}. ` +
-        `Response: ${JSON.stringify(data)}`,
+          `Response: ${JSON.stringify(data)}`,
       );
-      
+
       // Log warning if domain might not be verified
       if (data && !data.id) {
         this.logger.warn(
           `Email sent but no ID returned. This might indicate domain verification issues. ` +
-          `Check Resend dashboard to verify domain: ${this.fromEmail.split('@')[1]}`,
+            `Check Resend dashboard to verify domain: ${this.fromEmail.split('@')[1]}`,
         );
       }
     } catch (error) {
-      this.logger.error(`Error sending verification email to ${email}: ${error}`);
+      this.logger.error(
+        `Error sending verification email to ${email}: ${error}`,
+      );
       throw error;
     }
   }
@@ -262,8 +268,10 @@ export class EmailService {
     const html = this.getBaseEmailTemplate(content);
 
     try {
-      this.logger.debug(`Attempting to send password reset email to ${email} from ${this.fromEmail}`);
-      
+      this.logger.debug(
+        `Attempting to send password reset email to ${email} from ${this.fromEmail}`,
+      );
+
       const { data, error } = await this.resend.emails.send({
         from: this.fromEmail,
         to: email,
@@ -275,23 +283,27 @@ export class EmailService {
         this.logger.error(
           `Failed to send password reset email to ${email}: ${JSON.stringify(error)}`,
         );
-        throw new Error(`Failed to send email: ${error.message || JSON.stringify(error)}`);
+        throw new Error(
+          `Failed to send email: ${error.message || JSON.stringify(error)}`,
+        );
       }
 
       this.logger.log(
         `Password reset email sent to ${email}, ID: ${data?.id}. ` +
-        `Response: ${JSON.stringify(data)}`,
+          `Response: ${JSON.stringify(data)}`,
       );
-      
+
       // Log warning if domain might not be verified
       if (data && !data.id) {
         this.logger.warn(
           `Email sent but no ID returned. This might indicate domain verification issues. ` +
-          `Check Resend dashboard to verify domain: ${this.fromEmail.split('@')[1]}`,
+            `Check Resend dashboard to verify domain: ${this.fromEmail.split('@')[1]}`,
         );
       }
     } catch (error) {
-      this.logger.error(`Error sending password reset email to ${email}: ${error}`);
+      this.logger.error(
+        `Error sending password reset email to ${email}: ${error}`,
+      );
       throw error;
     }
   }

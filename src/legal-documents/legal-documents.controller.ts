@@ -17,10 +17,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { LegalDocumentsService } from './legal-documents.service';
-import {
-  CreateLegalDocumentDto,
-  UpdateLegalDocumentDto,
-} from './dto';
+import { CreateLegalDocumentDto, UpdateLegalDocumentDto } from './dto';
 import { DocumentType } from './entities/legal-document.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -31,9 +28,7 @@ import { BaseResponseDto } from '../shared/dto/base-response.dto';
 @ApiTags('Legal Documents')
 @Controller('legal-documents')
 export class LegalDocumentsController {
-  constructor(
-    private readonly legalDocumentsService: LegalDocumentsService,
-  ) {}
+  constructor(private readonly legalDocumentsService: LegalDocumentsService) {}
 
   // ============ PUBLIC ENDPOINTS ============
 
@@ -191,4 +186,3 @@ export class LegalDocumentsController {
     return BaseResponseDto.success('Legal document deleted successfully', null);
   }
 }
-

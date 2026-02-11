@@ -19,9 +19,15 @@ import {
 } from '@nestjs/swagger';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { SendPaymentAddressDto, MarkPaymentSentDto } from './dto/update-booking.dto';
+import {
+  SendPaymentAddressDto,
+  MarkPaymentSentDto,
+} from './dto/update-booking.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
-import { BookingResponseDto, BookingStatisticsDto } from './dto/booking-response.dto';
+import {
+  BookingResponseDto,
+  BookingStatisticsDto,
+} from './dto/booking-response.dto';
 import { BaseResponseDto } from '../shared/dto/base-response.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
@@ -57,7 +63,8 @@ export class BookingsController {
     return {
       success: true,
       data: data as any,
-      message: 'Booking request created successfully. Please wait for admin to provide payment details.',
+      message:
+        'Booking request created successfully. Please wait for admin to provide payment details.',
       timestamp: new Date().toISOString(),
     };
   }
@@ -112,7 +119,11 @@ export class BookingsController {
     @Param('id') id: string,
     @Body() dto: MarkPaymentSentDto,
   ): Promise<BaseResponseDto<BookingResponseDto>> {
-    const data = await this.bookingsService.markPaymentSent(id, user.userId, dto);
+    const data = await this.bookingsService.markPaymentSent(
+      id,
+      user.userId,
+      dto,
+    );
 
     return {
       success: true,
@@ -154,7 +165,12 @@ export class BookingsController {
     @Param('id') bookingId: string,
     @Body() dto: CreateMessageDto,
   ) {
-    const data = await this.bookingsService.sendMessage(bookingId, user.userId, dto, false);
+    const data = await this.bookingsService.sendMessage(
+      bookingId,
+      user.userId,
+      dto,
+      false,
+    );
 
     return {
       success: true,
@@ -174,7 +190,11 @@ export class BookingsController {
     @CurrentUser() user: RequestUser,
     @Param('id') bookingId: string,
   ) {
-    const data = await this.bookingsService.getMessages(bookingId, user.userId, false);
+    const data = await this.bookingsService.getMessages(
+      bookingId,
+      user.userId,
+      false,
+    );
 
     return {
       success: true,
@@ -194,7 +214,11 @@ export class BookingsController {
     @CurrentUser() user: RequestUser,
     @Param('id') bookingId: string,
   ) {
-    await this.bookingsService.markMessagesAsRead(bookingId, user.userId, false);
+    await this.bookingsService.markMessagesAsRead(
+      bookingId,
+      user.userId,
+      false,
+    );
 
     return {
       success: true,
@@ -217,6 +241,23 @@ export class BookingsController {
       success: true,
       data: { count },
       message: 'Unread count retrieved',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('my-bookings/analytics')
+  @ApiOperation({ summary: 'Get booking analytics for current user' })
+  @ApiResponse({
+    status: 200,
+    description: 'Analytics retrieved successfully',
+  })
+  async getMyBookingsAnalytics(@CurrentUser() user: RequestUser) {
+    const data = await this.bookingsService.getUserAnalytics(user.userId);
+
+    return {
+      success: true,
+      data,
+      message: 'Analytics retrieved successfully',
       timestamp: new Date().toISOString(),
     };
   }
@@ -301,7 +342,9 @@ export class BookingsController {
     description: 'Booking retrieved successfully',
     type: BaseResponseDto<BookingResponseDto>,
   })
-  async getBooking(@Param('id') id: string): Promise<BaseResponseDto<BookingResponseDto>> {
+  async getBooking(
+    @Param('id') id: string,
+  ): Promise<BaseResponseDto<BookingResponseDto>> {
     const data = await this.bookingsService.findOne(id, undefined, true);
 
     return {
@@ -326,7 +369,11 @@ export class BookingsController {
     @Param('id') id: string,
     @Body() dto: SendPaymentAddressDto,
   ): Promise<BaseResponseDto<BookingResponseDto>> {
-    const data = await this.bookingsService.sendPaymentAddress(id, user.userId, dto);
+    const data = await this.bookingsService.sendPaymentAddress(
+      id,
+      user.userId,
+      dto,
+    );
 
     return {
       success: true,
@@ -350,7 +397,11 @@ export class BookingsController {
     @Param('id') id: string,
     @Body() body: { adminNotes?: string },
   ): Promise<BaseResponseDto<BookingResponseDto>> {
-    const data = await this.bookingsService.approveBooking(id, user.userId, body.adminNotes);
+    const data = await this.bookingsService.approveBooking(
+      id,
+      user.userId,
+      body.adminNotes,
+    );
 
     return {
       success: true,
@@ -374,7 +425,11 @@ export class BookingsController {
     @Param('id') id: string,
     @Body() body: { adminNotes?: string },
   ): Promise<BaseResponseDto<BookingResponseDto>> {
-    const data = await this.bookingsService.rejectBooking(id, user.userId, body.adminNotes);
+    const data = await this.bookingsService.rejectBooking(
+      id,
+      user.userId,
+      body.adminNotes,
+    );
 
     return {
       success: true,
@@ -397,7 +452,12 @@ export class BookingsController {
     @Param('id') bookingId: string,
     @Body() dto: CreateMessageDto,
   ) {
-    const data = await this.bookingsService.sendMessage(bookingId, user.userId, dto, true);
+    const data = await this.bookingsService.sendMessage(
+      bookingId,
+      user.userId,
+      dto,
+      true,
+    );
 
     return {
       success: true,
@@ -419,7 +479,11 @@ export class BookingsController {
     @CurrentUser() user: RequestUser,
     @Param('id') bookingId: string,
   ) {
-    const data = await this.bookingsService.getMessages(bookingId, user.userId, true);
+    const data = await this.bookingsService.getMessages(
+      bookingId,
+      user.userId,
+      true,
+    );
 
     return {
       success: true,
@@ -451,4 +515,3 @@ export class BookingsController {
     };
   }
 }
-

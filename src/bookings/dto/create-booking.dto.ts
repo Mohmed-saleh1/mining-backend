@@ -1,4 +1,12 @@
-import { IsNotEmpty, IsUUID, IsEnum, IsInt, Min, IsOptional, IsString } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsUUID,
+  IsEnum,
+  IsInt,
+  Min,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { RentalDuration } from '../entities/booking.entity';
 
@@ -22,4 +30,3 @@ export class CreateBookingDto {
   @IsString()
   userNotes?: string;
 }
-

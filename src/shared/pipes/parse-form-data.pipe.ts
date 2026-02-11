@@ -10,7 +10,7 @@ export class ParseFormDataPipe implements PipeTransform {
 
     // Transform string values to appropriate types
     const transformed = { ...value };
-    
+
     // List of numeric fields
     const numericFields = [
       'hashRate',
@@ -37,13 +37,18 @@ export class ParseFormDataPipe implements PipeTransform {
         if (typeof transformed[field] === 'number') {
           return;
         }
-        
+
         if (transformed[field] === '') {
           // Empty string for optional fields - keep as undefined
-          if (field !== 'pricePerDay' && 
-              field !== 'pricePerWeek' && field !== 'pricePerMonth' &&
-              field !== 'profitPerHour' && field !== 'profitPerDay' &&
-              field !== 'profitPerWeek' && field !== 'profitPerMonth') {
+          if (
+            field !== 'pricePerDay' &&
+            field !== 'pricePerWeek' &&
+            field !== 'pricePerMonth' &&
+            field !== 'profitPerHour' &&
+            field !== 'profitPerDay' &&
+            field !== 'profitPerWeek' &&
+            field !== 'profitPerMonth'
+          ) {
             delete transformed[field];
           } else {
             // Required fields with empty string should be 0 or removed
@@ -55,10 +60,15 @@ export class ParseFormDataPipe implements PipeTransform {
             transformed[field] = numValue;
           } else {
             // Invalid number - remove for optional fields, set to 0 for required
-            if (field !== 'pricePerDay' && 
-                field !== 'pricePerWeek' && field !== 'pricePerMonth' &&
-                field !== 'profitPerHour' && field !== 'profitPerDay' &&
-                field !== 'profitPerWeek' && field !== 'profitPerMonth') {
+            if (
+              field !== 'pricePerDay' &&
+              field !== 'pricePerWeek' &&
+              field !== 'pricePerMonth' &&
+              field !== 'profitPerHour' &&
+              field !== 'profitPerDay' &&
+              field !== 'profitPerWeek' &&
+              field !== 'profitPerMonth'
+            ) {
               delete transformed[field];
             } else {
               transformed[field] = 0;
@@ -75,12 +85,13 @@ export class ParseFormDataPipe implements PipeTransform {
         if (typeof transformed[field] === 'boolean') {
           return;
         }
-        
+
         if (transformed[field] === '') {
           // Empty string - remove for optional fields
           delete transformed[field];
         } else if (typeof transformed[field] === 'string') {
-          transformed[field] = transformed[field] === 'true' || transformed[field] === '1';
+          transformed[field] =
+            transformed[field] === 'true' || transformed[field] === '1';
         }
       }
     });
@@ -94,4 +105,3 @@ export class ParseFormDataPipe implements PipeTransform {
     return !types.includes(metatype);
   }
 }
-

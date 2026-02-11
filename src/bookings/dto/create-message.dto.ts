@@ -13,4 +13,3 @@ export class CreateMessageDto {
   @IsEnum(MessageType)
   messageType?: MessageType;
 }
-

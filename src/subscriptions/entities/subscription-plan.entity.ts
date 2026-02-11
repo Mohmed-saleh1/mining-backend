@@ -63,4 +63,3 @@ export class SubscriptionPlan {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

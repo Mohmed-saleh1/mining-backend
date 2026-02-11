@@ -50,7 +50,10 @@ export class MiningMachinesController {
   })
   async getPublicMachines() {
     const machines = await this.miningMachinesService.getPublicMachines();
-    return BaseResponseDto.success('Public mining machines retrieved successfully', machines);
+    return BaseResponseDto.success(
+      'Public mining machines retrieved successfully',
+      machines,
+    );
   }
 
   @Get('featured')
@@ -61,7 +64,10 @@ export class MiningMachinesController {
   })
   async getFeaturedMachines() {
     const machines = await this.miningMachinesService.getFeaturedMachines();
-    return BaseResponseDto.success('Featured mining machines retrieved successfully', machines);
+    return BaseResponseDto.success(
+      'Featured mining machines retrieved successfully',
+      machines,
+    );
   }
 
   @Get('public/:id')
@@ -73,7 +79,10 @@ export class MiningMachinesController {
   @ApiResponse({ status: 404, description: 'Mining machine not found' })
   async findOnePublic(@Param('id', ParseUUIDPipe) id: string) {
     const machine = await this.miningMachinesService.findOne(id);
-    return BaseResponseDto.success('Mining machine retrieved successfully', machine);
+    return BaseResponseDto.success(
+      'Mining machine retrieved successfully',
+      machine,
+    );
   }
 
   // ============ ADMIN ENDPOINTS ============
@@ -101,8 +110,13 @@ export class MiningMachinesController {
       createMiningMachineDto.image = imageUrl;
     }
 
-    const machine = await this.miningMachinesService.create(createMiningMachineDto);
-    return BaseResponseDto.success('Mining machine created successfully', machine);
+    const machine = await this.miningMachinesService.create(
+      createMiningMachineDto,
+    );
+    return BaseResponseDto.success(
+      'Mining machine created successfully',
+      machine,
+    );
   }
 
   @Get()
@@ -118,7 +132,7 @@ export class MiningMachinesController {
     status: 200,
     description: 'Returns all mining machines',
   })
- async findAll(
+  async findAll(
     @Query('isActive') isActive?: string,
     @Query('isFeatured') isFeatured?: string,
     @Query('type') type?: string,
@@ -145,7 +159,10 @@ export class MiningMachinesController {
     }
 
     const machines = await this.miningMachinesService.findAll(options);
-    return BaseResponseDto.success('Mining machines retrieved successfully', machines);
+    return BaseResponseDto.success(
+      'Mining machines retrieved successfully',
+      machines,
+    );
   }
 
   @Get(':id')
@@ -196,8 +213,14 @@ export class MiningMachinesController {
       updateMiningMachineDto.image = imageUrl;
     }
 
-    const machine = await this.miningMachinesService.update(id, updateMiningMachineDto);
-    return BaseResponseDto.success('Mining machine updated successfully', machine);
+    const machine = await this.miningMachinesService.update(
+      id,
+      updateMiningMachineDto,
+    );
+    return BaseResponseDto.success(
+      'Mining machine updated successfully',
+      machine,
+    );
   }
 
   @Delete(':id')
@@ -260,4 +283,3 @@ export class MiningMachinesController {
     return this.miningMachinesService.updateStatus(id, status);
   }
 }
-

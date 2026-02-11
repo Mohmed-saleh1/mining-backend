@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Put,
-  Body,
-  UseGuards,
-  Param,
-} from '@nestjs/common';
+import { Controller, Get, Put, Body, UseGuards, Param } from '@nestjs/common';
 import { WalletsService } from './wallets.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
@@ -31,7 +24,10 @@ export class WalletsController {
       type,
       ...info,
     }));
-    return BaseResponseDto.success('Crypto types retrieved successfully', cryptoTypes);
+    return BaseResponseDto.success(
+      'Crypto types retrieved successfully',
+      cryptoTypes,
+    );
   }
 
   @Get(':cryptoType')
@@ -48,7 +44,13 @@ export class WalletsController {
     @CurrentUser() user: RequestUser,
     @Body() updateDto: UpdateWalletAddressDto,
   ) {
-    const wallet = await this.walletsService.updateWalletAddress(user.userId, updateDto);
-    return BaseResponseDto.success('Wallet address updated successfully', wallet);
+    const wallet = await this.walletsService.updateWalletAddress(
+      user.userId,
+      updateDto,
+    );
+    return BaseResponseDto.success(
+      'Wallet address updated successfully',
+      wallet,
+    );
   }
 }

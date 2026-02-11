@@ -146,4 +146,3 @@ export class BookingStatisticsDto {
   @ApiProperty()
   cancelled: number;
 }
-

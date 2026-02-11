@@ -170,7 +170,8 @@ export class AuthController {
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Create a verified user ready to login',
-    description: 'Create a new user with email verified and active status. Useful for development/testing. Returns user data and access token.',
+    description:
+      'Create a new user with email verified and active status. Useful for development/testing. Returns user data and access token.',
   })
   @ApiResponse({
     status: 201,
@@ -180,8 +181,12 @@ export class AuthController {
     status: 400,
     description: 'User with this email already exists',
   })
-  async createVerifiedUser(@Body() createVerifiedUserDto: CreateVerifiedUserDto) {
-    const result = await this.authService.createVerifiedUser(createVerifiedUserDto);
+  async createVerifiedUser(
+    @Body() createVerifiedUserDto: CreateVerifiedUserDto,
+  ) {
+    const result = await this.authService.createVerifiedUser(
+      createVerifiedUserDto,
+    );
     return BaseResponseDto.success(
       'Verified user created successfully. You can now login with these credentials.',
       result,

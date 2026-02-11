@@ -18,12 +18,12 @@ export class WalletsService {
   async initializeWalletsForUser(userId: string): Promise<void> {
     // Create wallets for all crypto types
     const cryptoTypes = Object.values(CryptoType);
-    
+
     for (const cryptoType of cryptoTypes) {
       const existingWallet = await this.walletRepository.findOne({
         where: { userId, cryptoType },
       });
-      
+
       if (!existingWallet) {
         const wallet = this.walletRepository.create({
           userId,
@@ -41,7 +41,7 @@ export class WalletsService {
   async getAllWallets(userId: string): Promise<AllWalletsResponseDto> {
     // Ensure user has wallets initialized
     await this.initializeWalletsForUser(userId);
-    
+
     const wallets = await this.walletRepository.find({
       where: { userId, isActive: true },
       order: { cryptoType: 'ASC' },
@@ -61,7 +61,10 @@ export class WalletsService {
     };
   }
 
-  async getWallet(userId: string, cryptoType: CryptoType): Promise<WalletResponseDto> {
+  async getWallet(
+    userId: string,
+    cryptoType: CryptoType,
+  ): Promise<WalletResponseDto> {
     let wallet = await this.walletRepository.findOne({
       where: { userId, cryptoType },
     });

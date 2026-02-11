@@ -214,7 +214,9 @@ export class UsersService {
     return UserResponseDto.fromEntity(savedAdmin);
   }
 
-  async createVerifiedUser(createUserDto: CreateUserDto): Promise<UserResponseDto> {
+  async createVerifiedUser(
+    createUserDto: CreateUserDto,
+  ): Promise<UserResponseDto> {
     const existingUser = await this.userRepository.findOne({
       where: { email: createUserDto.email },
     });

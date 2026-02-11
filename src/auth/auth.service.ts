@@ -269,9 +269,13 @@ export class AuthService {
     );
   }
 
-  async createVerifiedUser(createVerifiedUserDto: CreateVerifiedUserDto): Promise<AuthResponse> {
+  async createVerifiedUser(
+    createVerifiedUserDto: CreateVerifiedUserDto,
+  ): Promise<AuthResponse> {
     // Create verified user (emailVerified = true, isActive = true)
-    const user = await this.usersService.createVerifiedUser(createVerifiedUserDto);
+    const user = await this.usersService.createVerifiedUser(
+      createVerifiedUserDto,
+    );
 
     // Initialize wallets for the new user
     await this.walletsService.initializeWalletsForUser(user.id);

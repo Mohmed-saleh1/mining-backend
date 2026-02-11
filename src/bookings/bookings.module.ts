@@ -7,12 +7,9 @@ import { BookingMessage } from './entities/booking-message.entity';
 import { MiningMachine } from '../mining-machines/entities/mining-machine.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Booking, BookingMessage, MiningMachine]),
-  ],
+  imports: [TypeOrmModule.forFeature([Booking, BookingMessage, MiningMachine])],
   controllers: [BookingsController],
   providers: [BookingsService],
   exports: [BookingsService],
 })
 export class BookingsModule {}
-

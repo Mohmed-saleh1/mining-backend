@@ -9,15 +9,25 @@ import {
   Query,
   UseGuards,
   Request,
+  Headers,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { SubscriptionsService } from './subscriptions.service';
-import { CreateSubscriptionDto, CreateSubscriptionPlanDto, PaytabsCallbackDto } from './dto';
+import {
+  CreateSubscriptionDto,
+  CreateSubscriptionPlanDto,
+  PaytabsCallbackDto,
+} from './dto';
 import { SubscriptionStatus } from './entities/subscription.entity';
 
 @ApiTags('subscriptions')
@@ -25,14 +35,34 @@ import { SubscriptionStatus } from './entities/subscription.entity';
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
 
-  // Public: PayTabs callback
+  // ==================== Payment Callbacks (Public) ====================
+
   @Post('paytabs/callback')
   @ApiOperation({ summary: 'PayTabs payment callback webhook' })
   async handlePaytabsCallback(@Body() callbackDto: PaytabsCallbackDto) {
     return this.subscriptionsService.handlePaytabsCallback(callbackDto);
   }
 
-  // Admin: Subscription Plan Management
+  @Post('binance/callback')
+  @ApiOperation({ summary: 'Binance Pay payment callback webhook' })
+  async handleBinanceCallback(
+    @Body() callbackBody: any,
+    @Headers('BinancePay-Timestamp') timestamp?: string,
+    @Headers('BinancePay-Nonce') nonce?: string,
+    @Headers('BinancePay-Signature') signature?: string,
+  ) {
+    await this.subscriptionsService.handleBinanceCallback(
+      callbackBody,
+      timestamp,
+      nonce,
+      signature,
+    );
+    // Binance Pay expects { returnCode: 'SUCCESS' } in the response
+    return { returnCode: 'SUCCESS', returnMessage: null };
+  }
+
+  // ==================== Subscription Plan Management (Admin) ====================
+
   @Post('plans')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
@@ -77,11 +107,15 @@ export class SubscriptionsController {
     return { message: 'Plan deleted successfully' };
   }
 
-  // User: Subscription Management
+  // ==================== User Subscription Management ====================
+
   @Post()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Create a new subscription' })
+  @ApiOperation({
+    summary:
+      'Create a new subscription (choose payment method: paytabs or binance)',
+  })
   async createSubscription(
     @CurrentUser() user: any,
     @Body() createDto: CreateSubscriptionDto,
@@ -113,7 +147,8 @@ export class SubscriptionsController {
     return this.subscriptionsService.cancelSubscription(id, user.userId);
   }
 
-  // Admin: Subscription Management
+  // ==================== Admin Subscription Management ====================
+
   @Get('admin')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.MANAGER)
@@ -152,4 +187,3 @@ export class SubscriptionsController {
     return this.subscriptionsService.getStatistics();
   }
 }
-

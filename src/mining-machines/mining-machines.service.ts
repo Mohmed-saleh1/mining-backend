@@ -123,7 +123,10 @@ export class MiningMachinesService {
     return this.miningMachineRepository.save(machine);
   }
 
-  async updateStatus(id: string, status: MachineStatus): Promise<MiningMachine> {
+  async updateStatus(
+    id: string,
+    status: MachineStatus,
+  ): Promise<MiningMachine> {
     const machine = await this.findOne(id);
     machine.status = status;
     return this.miningMachineRepository.save(machine);

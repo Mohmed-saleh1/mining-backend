@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
+import { TransformInterceptor } from './shared/interceptors/transform.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -21,6 +22,9 @@ async function bootstrap() {
       transform: true,
     }),
   );
+
+  // Global response interceptor to wrap all responses in BaseResponseDto
+  app.useGlobalInterceptors(new TransformInterceptor());
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -59,4 +63,3 @@ async function bootstrap() {
 }
 
 void bootstrap();
-

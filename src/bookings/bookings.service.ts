@@ -6,11 +6,19 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Booking, BookingStatus, RentalDuration } from './entities/booking.entity';
+import {
+  Booking,
+  BookingStatus,
+  RentalDuration,
+} from './entities/booking.entity';
 import { BookingMessage, MessageType } from './entities/booking-message.entity';
 import { MiningMachine } from '../mining-machines/entities/mining-machine.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
-import { UpdateBookingDto, SendPaymentAddressDto, MarkPaymentSentDto } from './dto/update-booking.dto';
+import {
+  UpdateBookingDto,
+  SendPaymentAddressDto,
+  MarkPaymentSentDto,
+} from './dto/update-booking.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { User } from '../users/entities/user.entity';
 
@@ -25,7 +33,11 @@ export class BookingsService {
     private readonly machineRepository: Repository<MiningMachine>,
   ) {}
 
-  private calculatePrice(machine: MiningMachine, duration: RentalDuration, quantity: number): number {
+  private calculatePrice(
+    machine: MiningMachine,
+    duration: RentalDuration,
+    quantity: number,
+  ): number {
     let pricePerUnit: number;
     switch (duration) {
       case RentalDuration.DAY:
@@ -53,7 +65,9 @@ export class BookingsService {
     }
 
     if (!machine.isActive) {
-      throw new BadRequestException('This machine is not available for booking');
+      throw new BadRequestException(
+        'This machine is not available for booking',
+      );
     }
 
     const availableUnits = machine.totalUnits - machine.rentedUnits;
@@ -61,7 +75,11 @@ export class BookingsService {
       throw new BadRequestException(`Only ${availableUnits} units available`);
     }
 
-    const totalPrice = this.calculatePrice(machine, createDto.rentalDuration, createDto.quantity);
+    const totalPrice = this.calculatePrice(
+      machine,
+      createDto.rentalDuration,
+      createDto.quantity,
+    );
 
     const booking = this.bookingRepository.create({
       userId,
@@ -113,7 +131,13 @@ export class BookingsService {
 
     const [data, total] = await this.bookingRepository.findAndCount({
       where,
-      relations: ['machine', 'user', 'messages', 'messages.sender', 'approvedBy'],
+      relations: [
+        'machine',
+        'user',
+        'messages',
+        'messages.sender',
+        'approvedBy',
+      ],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,
@@ -128,10 +152,20 @@ export class BookingsService {
     };
   }
 
-  async findOne(id: string, userId?: string, isAdmin: boolean = false): Promise<Booking> {
+  async findOne(
+    id: string,
+    userId?: string,
+    isAdmin: boolean = false,
+  ): Promise<Booking> {
     const booking = await this.bookingRepository.findOne({
       where: { id },
-      relations: ['machine', 'user', 'messages', 'messages.sender', 'approvedBy'],
+      relations: [
+        'machine',
+        'user',
+        'messages',
+        'messages.sender',
+        'approvedBy',
+      ],
     });
 
     if (!booking) {
@@ -144,8 +178,9 @@ export class BookingsService {
 
     // Sort messages by creation date
     if (booking.messages) {
-      booking.messages.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      booking.messages.sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
     }
 
@@ -160,7 +195,9 @@ export class BookingsService {
     const booking = await this.findOne(bookingId, undefined, true);
 
     if (booking.status !== BookingStatus.PENDING) {
-      throw new BadRequestException('Payment address can only be sent for pending bookings');
+      throw new BadRequestException(
+        'Payment address can only be sent for pending bookings',
+      );
     }
 
     booking.paymentAddress = dto.paymentAddress;
@@ -194,7 +231,9 @@ export class BookingsService {
     const booking = await this.findOne(bookingId, userId);
 
     if (booking.status !== BookingStatus.AWAITING_PAYMENT) {
-      throw new BadRequestException('Can only mark payment as sent when awaiting payment');
+      throw new BadRequestException(
+        'Can only mark payment as sent when awaiting payment',
+      );
     }
 
     booking.status = BookingStatus.PAYMENT_SENT;
@@ -214,11 +253,17 @@ export class BookingsService {
     return this.findOne(bookingId, userId);
   }
 
-  async approveBooking(bookingId: string, adminId: string, adminNotes?: string): Promise<Booking> {
+  async approveBooking(
+    bookingId: string,
+    adminId: string,
+    adminNotes?: string,
+  ): Promise<Booking> {
     const booking = await this.findOne(bookingId, undefined, true);
 
     if (booking.status !== BookingStatus.PAYMENT_SENT) {
-      throw new BadRequestException('Can only approve bookings with payment sent');
+      throw new BadRequestException(
+        'Can only approve bookings with payment sent',
+      );
     }
 
     // Update machine rented units
@@ -227,7 +272,10 @@ export class BookingsService {
     });
 
     if (machine) {
-      machine.rentedUnits = Math.min(machine.totalUnits, machine.rentedUnits + booking.quantity);
+      machine.rentedUnits = Math.min(
+        machine.totalUnits,
+        machine.rentedUnits + booking.quantity,
+      );
       await this.machineRepository.save(machine);
     }
 
@@ -249,11 +297,20 @@ export class BookingsService {
     return this.findOne(bookingId, undefined, true);
   }
 
-  async rejectBooking(bookingId: string, adminId: string, adminNotes?: string): Promise<Booking> {
+  async rejectBooking(
+    bookingId: string,
+    adminId: string,
+    adminNotes?: string,
+  ): Promise<Booking> {
     const booking = await this.findOne(bookingId, undefined, true);
 
-    if (booking.status === BookingStatus.APPROVED || booking.status === BookingStatus.REJECTED) {
-      throw new BadRequestException('Cannot reject an already processed booking');
+    if (
+      booking.status === BookingStatus.APPROVED ||
+      booking.status === BookingStatus.REJECTED
+    ) {
+      throw new BadRequestException(
+        'Cannot reject an already processed booking',
+      );
     }
 
     booking.status = BookingStatus.REJECTED;
@@ -300,7 +357,11 @@ export class BookingsService {
     dto: CreateMessageDto,
     isAdmin: boolean = false,
   ): Promise<BookingMessage> {
-    const booking = await this.findOne(bookingId, isAdmin ? undefined : senderId, isAdmin);
+    const booking = await this.findOne(
+      bookingId,
+      isAdmin ? undefined : senderId,
+      isAdmin,
+    );
 
     const message = this.messageRepository.create({
       bookingId,
@@ -313,7 +374,11 @@ export class BookingsService {
     return this.messageRepository.save(message);
   }
 
-  async getMessages(bookingId: string, userId: string, isAdmin: boolean = false): Promise<BookingMessage[]> {
+  async getMessages(
+    bookingId: string,
+    userId: string,
+    isAdmin: boolean = false,
+  ): Promise<BookingMessage[]> {
     await this.findOne(bookingId, isAdmin ? undefined : userId, isAdmin);
 
     const messages = await this.messageRepository.find({
@@ -325,7 +390,11 @@ export class BookingsService {
     return messages;
   }
 
-  async markMessagesAsRead(bookingId: string, userId: string, isAdmin: boolean = false): Promise<void> {
+  async markMessagesAsRead(
+    bookingId: string,
+    userId: string,
+    isAdmin: boolean = false,
+  ): Promise<void> {
     await this.findOne(bookingId, isAdmin ? undefined : userId, isAdmin);
 
     // Mark messages from the other party as read
@@ -339,7 +408,11 @@ export class BookingsService {
     );
   }
 
-  private async createSystemMessage(bookingId: string, senderId: string, content: string): Promise<BookingMessage> {
+  private async createSystemMessage(
+    bookingId: string,
+    senderId: string,
+    content: string,
+  ): Promise<BookingMessage> {
     const message = this.messageRepository.create({
       bookingId,
       senderId,
@@ -360,16 +433,35 @@ export class BookingsService {
     rejected: number;
     cancelled: number;
   }> {
-    const [total, pending, awaitingPayment, paymentSent, approved, rejected, cancelled] =
-      await Promise.all([
-        this.bookingRepository.count(),
-        this.bookingRepository.count({ where: { status: BookingStatus.PENDING } }),
-        this.bookingRepository.count({ where: { status: BookingStatus.AWAITING_PAYMENT } }),
-        this.bookingRepository.count({ where: { status: BookingStatus.PAYMENT_SENT } }),
-        this.bookingRepository.count({ where: { status: BookingStatus.APPROVED } }),
-        this.bookingRepository.count({ where: { status: BookingStatus.REJECTED } }),
-        this.bookingRepository.count({ where: { status: BookingStatus.CANCELLED } }),
-      ]);
+    const [
+      total,
+      pending,
+      awaitingPayment,
+      paymentSent,
+      approved,
+      rejected,
+      cancelled,
+    ] = await Promise.all([
+      this.bookingRepository.count(),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.PENDING },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.AWAITING_PAYMENT },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.PAYMENT_SENT },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.APPROVED },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.REJECTED },
+      }),
+      this.bookingRepository.count({
+        where: { status: BookingStatus.CANCELLED },
+      }),
+    ]);
 
     return {
       total,
@@ -382,7 +474,10 @@ export class BookingsService {
     };
   }
 
-  async getUnreadCount(userId: string, isAdmin: boolean = false): Promise<number> {
+  async getUnreadCount(
+    userId: string,
+    isAdmin: boolean = false,
+  ): Promise<number> {
     if (isAdmin) {
       // Count unread messages from users
       return this.messageRepository.count({
@@ -401,7 +496,7 @@ export class BookingsService {
       if (bookings.length === 0) return 0;
 
       const bookingIds = bookings.map((b) => b.id);
-      
+
       return this.messageRepository
         .createQueryBuilder('message')
         .where('message.booking_id IN (:...bookingIds)', { bookingIds })
@@ -410,5 +505,82 @@ export class BookingsService {
         .getCount();
     }
   }
-}
 
+  async getUserAnalytics(userId: string): Promise<{
+    totalBookings: number;
+    totalInvestment: number;
+    totalRevenue: number;
+    activeBookings: number;
+    bookingsByStatus: Record<BookingStatus, number>;
+    revenueByMonth: Array<{ month: string; revenue: number }>;
+  }> {
+    const bookings = await this.bookingRepository.find({
+      where: { userId },
+      relations: ['machine'],
+    });
+
+    const totalBookings = bookings.length;
+    const totalInvestment = bookings.reduce(
+      (sum, booking) => sum + Number(booking.totalPrice),
+      0,
+    );
+    
+    const approvedBookings = bookings.filter(
+      (b) => b.status === BookingStatus.APPROVED,
+    );
+    const totalRevenue = approvedBookings.reduce(
+      (sum, booking) => sum + Number(booking.totalPrice),
+      0,
+    );
+    const activeBookings = approvedBookings.length;
+
+    // Count bookings by status
+    const bookingsByStatus = bookings.reduce(
+      (acc, booking) => {
+        acc[booking.status] = (acc[booking.status] || 0) + 1;
+        return acc;
+      },
+      {} as Record<BookingStatus, number>,
+    );
+
+    // Initialize all statuses to 0
+    Object.values(BookingStatus).forEach((status) => {
+      if (!bookingsByStatus[status]) {
+        bookingsByStatus[status] = 0;
+      }
+    });
+
+    // Calculate revenue by month for approved bookings
+    const revenueByMonthMap = new Map<string, { month: string; revenue: number }>();
+    approvedBookings.forEach((booking) => {
+      const date = new Date(booking.approvedAt || booking.createdAt);
+      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthLabel = date.toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      const existing = revenueByMonthMap.get(monthKey);
+      const currentRevenue = existing ? existing.revenue : 0;
+      revenueByMonthMap.set(monthKey, {
+        month: monthLabel,
+        revenue: currentRevenue + Number(booking.totalPrice),
+      });
+    });
+
+    // Convert to array and sort by month key
+    const revenueByMonth = Array.from(revenueByMonthMap.entries())
+      .map(([key, data]) => ({
+        month: data.month,
+        revenue: data.revenue,
+        sortKey: key,
+      }))
+      .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
+      .map(({ month, revenue }) => ({ month, revenue }));
+
+    return {
+      totalBookings,
+      totalInvestment,
+      totalRevenue,
+      activeBookings,
+      bookingsByStatus,
+      revenueByMonth,
+    };
+  }
+}

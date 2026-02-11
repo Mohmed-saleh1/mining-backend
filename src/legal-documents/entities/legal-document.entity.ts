@@ -35,4 +35,3 @@ export class LegalDocument {
   @UpdateDateColumn()
   updatedAt: Date;
 }
-

@@ -7,11 +7,9 @@ import {
   Min,
   IsNotEmpty,
 } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import {
-  MachineType,
-  MachineStatus,
-} from '../entities/mining-machine.entity';
+import { MachineType, MachineStatus } from '../entities/mining-machine.entity';
 
 export class CreateMiningMachineDto {
   @ApiProperty({ example: 'Antminer S19 Pro' })
@@ -20,7 +18,8 @@ export class CreateMiningMachineDto {
   name: string;
 
   @ApiPropertyOptional({
-    example: 'High-performance Bitcoin mining machine with excellent efficiency',
+    example:
+      'High-performance Bitcoin mining machine with excellent efficiency',
   })
   @IsString()
   @IsOptional()
@@ -48,8 +47,10 @@ export class CreateMiningMachineDto {
 
   // Specifications
   @ApiPropertyOptional({ example: 110 })
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Type(() => Number)
+  @IsNumber()
   @Min(0)
   hashRate?: number;
 
@@ -59,8 +60,10 @@ export class CreateMiningMachineDto {
   hashRateUnit?: string;
 
   @ApiPropertyOptional({ example: 3250 })
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Type(() => Number)
+  @IsNumber()
   @Min(0)
   powerConsumption?: number;
 
@@ -75,57 +78,78 @@ export class CreateMiningMachineDto {
   miningCoin?: string;
 
   @ApiPropertyOptional({ example: 29.5 })
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Type(() => Number)
+  @IsNumber()
   @Min(0)
   efficiency?: number;
 
   // Pricing
   @ApiProperty({ example: 120 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   pricePerDay: number;
 
   @ApiProperty({ example: 750 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   pricePerWeek: number;
 
   @ApiProperty({ example: 2800 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   pricePerMonth: number;
 
   // Profit Rates
   @ApiProperty({ example: 0.45 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   profitPerHour: number;
 
   @ApiProperty({ example: 10.8 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   profitPerDay: number;
 
   @ApiProperty({ example: 75.6 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   profitPerWeek: number;
 
   @ApiProperty({ example: 324 })
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? 0 : Number(value)))
+  @Type(() => Number)
   @IsNumber()
   @Min(0)
   profitPerMonth: number;
 
   // Status and availability
-  @ApiPropertyOptional({ enum: MachineStatus, default: MachineStatus.AVAILABLE })
+  @ApiPropertyOptional({
+    enum: MachineStatus,
+    default: MachineStatus.AVAILABLE,
+  })
   @IsEnum(MachineStatus)
   @IsOptional()
   status?: MachineStatus;
 
   @ApiPropertyOptional({ example: 10 })
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Type(() => Number)
+  @IsNumber()
   @Min(1)
   totalUnits?: number;
 
@@ -140,7 +164,9 @@ export class CreateMiningMachineDto {
   isFeatured?: boolean;
 
   @ApiPropertyOptional({ example: 0 })
-  @IsNumber()
   @IsOptional()
+  @Transform(({ value }) => (value === '' || value === null || value === undefined ? undefined : Number(value)))
+  @Type(() => Number)
+  @IsNumber()
   sortOrder?: number;
 }

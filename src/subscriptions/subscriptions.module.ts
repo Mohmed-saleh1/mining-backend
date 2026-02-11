@@ -9,11 +9,15 @@ import { User } from '../users/entities/user.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Subscription, SubscriptionPlan, MiningMachine, User]),
+    TypeOrmModule.forFeature([
+      Subscription,
+      SubscriptionPlan,
+      MiningMachine,
+      User,
+    ]),
   ],
   controllers: [SubscriptionsController],
   providers: [SubscriptionsService],
   exports: [SubscriptionsService],
 })
 export class SubscriptionsModule {}
-

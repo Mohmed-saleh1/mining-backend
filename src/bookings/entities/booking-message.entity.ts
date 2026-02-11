@@ -55,4 +55,3 @@ export class BookingMessage {
   @CreateDateColumn()
   createdAt: Date;
 }
-

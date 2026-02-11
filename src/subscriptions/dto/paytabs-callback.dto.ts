@@ -41,4 +41,3 @@ export class PaytabsCallbackDto {
   @IsString()
   customer_details?: string;
 }
-
