@@ -191,3 +191,4 @@ export class LegalDocumentsController {
     return BaseResponseDto.success('Legal document deleted successfully', null);
   }
 }
+

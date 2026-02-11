@@ -22,3 +22,4 @@ export class CreateBookingDto {
   @IsString()
   userNotes?: string;
 }
+

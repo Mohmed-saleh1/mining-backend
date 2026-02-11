@@ -28,9 +28,6 @@ export class BookingsService {
   private calculatePrice(machine: MiningMachine, duration: RentalDuration, quantity: number): number {
     let pricePerUnit: number;
     switch (duration) {
-      case RentalDuration.HOUR:
-        pricePerUnit = Number(machine.pricePerHour);
-        break;
       case RentalDuration.DAY:
         pricePerUnit = Number(machine.pricePerDay);
         break;
@@ -414,3 +411,4 @@ export class BookingsService {
     }
   }
 }
+

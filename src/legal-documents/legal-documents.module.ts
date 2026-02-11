@@ -11,3 +11,4 @@ import { LegalDocument } from './entities/legal-document.entity';
   exports: [LegalDocumentsService],
 })
 export class LegalDocumentsModule {}
+

@@ -12,3 +12,4 @@ export class UpdateLegalDocumentDto {
   @IsOptional()
   contentAr?: string;
 }
+

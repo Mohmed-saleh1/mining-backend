@@ -15,3 +15,4 @@ import { MiningMachine } from '../mining-machines/entities/mining-machine.entity
   exports: [BookingsService],
 })
 export class BookingsModule {}
+

@@ -16,7 +16,6 @@ export class ParseFormDataPipe implements PipeTransform {
       'hashRate',
       'powerConsumption',
       'efficiency',
-      'pricePerHour',
       'pricePerDay',
       'pricePerWeek',
       'pricePerMonth',
@@ -41,7 +40,7 @@ export class ParseFormDataPipe implements PipeTransform {
         
         if (transformed[field] === '') {
           // Empty string for optional fields - keep as undefined
-          if (field !== 'pricePerHour' && field !== 'pricePerDay' && 
+          if (field !== 'pricePerDay' && 
               field !== 'pricePerWeek' && field !== 'pricePerMonth' &&
               field !== 'profitPerHour' && field !== 'profitPerDay' &&
               field !== 'profitPerWeek' && field !== 'profitPerMonth') {
@@ -56,7 +55,7 @@ export class ParseFormDataPipe implements PipeTransform {
             transformed[field] = numValue;
           } else {
             // Invalid number - remove for optional fields, set to 0 for required
-            if (field !== 'pricePerHour' && field !== 'pricePerDay' && 
+            if (field !== 'pricePerDay' && 
                 field !== 'pricePerWeek' && field !== 'pricePerMonth' &&
                 field !== 'profitPerHour' && field !== 'profitPerDay' &&
                 field !== 'profitPerWeek' && field !== 'profitPerMonth') {
@@ -95,3 +94,4 @@ export class ParseFormDataPipe implements PipeTransform {
     return !types.includes(metatype);
   }
 }
+

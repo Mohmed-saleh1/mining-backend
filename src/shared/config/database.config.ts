@@ -4,7 +4,10 @@ import { ConfigService } from '@nestjs/config';
 export const getDatabaseConfig = (
   configService: ConfigService,
 ): TypeOrmModuleOptions => {
-  return {
+  const dbSsl =
+    configService.get<string>('DB_SSL', 'false').toLowerCase() === 'true';
+
+  const config: TypeOrmModuleOptions = {
     type: 'postgres',
     host: configService.get<string>('DB_HOST', 'localhost'),
     port: configService.get<number>('DB_PORT', 5432),
@@ -16,11 +19,6 @@ export const getDatabaseConfig = (
     logging: configService.get<boolean>('DB_LOGGING', false),
     migrations: [__dirname + '/../../database/migrations/**/*{.ts,.js}'],
     migrationsRun: configService.get<boolean>('DB_MIGRATIONS_RUN', false),
-    ssl: configService.get<boolean>('DB_SSL', false)
-      ? {
-          rejectUnauthorized: false,
-        }
-      : false,
     // Connection pool settings
     extra: {
       max: configService.get<number>('DB_MAX_CONNECTIONS', 10),
@@ -31,5 +29,13 @@ export const getDatabaseConfig = (
         2000,
       ),
     },
+    // Only add SSL configuration if explicitly enabled
+    ...(dbSsl && {
+      ssl: {
+        rejectUnauthorized: false,
+      },
+    }),
   };
+
+  return config;
 };

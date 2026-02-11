@@ -66,9 +66,6 @@ export class MiningMachine {
 
   // Pricing - Rental costs
   @Column({ type: 'decimal', precision: 10, scale: 2 })
-  pricePerHour: number;
-
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
   pricePerDay: number;
 
   @Column({ type: 'decimal', precision: 10, scale: 2 })

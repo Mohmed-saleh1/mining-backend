@@ -26,3 +26,4 @@ export class MarkPaymentSentDto {
   @IsString()
   transactionHash?: string;
 }
+

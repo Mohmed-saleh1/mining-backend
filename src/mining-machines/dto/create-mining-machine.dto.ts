@@ -81,11 +81,6 @@ export class CreateMiningMachineDto {
   efficiency?: number;
 
   // Pricing
-  @ApiProperty({ example: 5.5 })
-  @IsNumber()
-  @Min(0)
-  pricePerHour: number;
-
   @ApiProperty({ example: 120 })
   @IsNumber()
   @Min(0)

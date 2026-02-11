@@ -87,3 +87,4 @@ export class LegalDocumentsService {
     await this.legalDocumentRepository.remove(document);
   }
 }
+
