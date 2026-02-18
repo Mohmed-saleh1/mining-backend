@@ -50,3 +50,5 @@ export class CreateSubscriptionDto {
   @IsEnum(PaymentMethod)
   paymentMethod?: PaymentMethod;
 }
+
+

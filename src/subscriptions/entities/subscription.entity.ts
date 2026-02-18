@@ -21,6 +21,7 @@ export enum SubscriptionStatus {
 export enum PaymentMethod {
   PAYTABS = 'paytabs',
   BINANCE = 'binance',
+  CRYPTOMUS = 'cryptomus',
 }
 
 @Entity('subscriptions')
@@ -91,6 +92,12 @@ export class Subscription {
   @Column({ nullable: true })
   binancePrepayId: string;
 
+  @Column({ nullable: true })
+  cryptomusOrderId: string;
+
+  @Column({ nullable: true })
+  cryptomusInvoiceId: string;
+
   @Column({ type: 'timestamp', nullable: true })
   startDate: Date;
 
@@ -109,3 +116,5 @@ export class Subscription {
   @UpdateDateColumn()
   updatedAt: Date;
 }
+
+

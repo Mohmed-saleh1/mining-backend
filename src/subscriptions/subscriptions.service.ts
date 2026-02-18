@@ -39,6 +39,11 @@ export class SubscriptionsService {
   private readonly binanceSecretKey: string;
   private readonly binanceBaseUrl: string;
 
+  // Cryptomus config
+  private readonly cryptomusApiKey: string;
+  private readonly cryptomusMerchantId: string;
+  private readonly cryptomusBaseUrl: string;
+
   constructor(
     @InjectRepository(Subscription)
     private readonly subscriptionRepository: Repository<Subscription>,
@@ -68,6 +73,15 @@ export class SubscriptionsService {
     this.binanceBaseUrl =
       this.configService.get<string>('BINANCE_PAY_BASE_URL') ||
       'https://bpay.binanceapi.com';
+
+    // Cryptomus
+    this.cryptomusApiKey =
+      this.configService.get<string>('CRYPTOMUS_API_KEY') || '';
+    this.cryptomusMerchantId =
+      this.configService.get<string>('CRYPTOMUS_MERCHANT_ID') || '';
+    this.cryptomusBaseUrl =
+      this.configService.get<string>('CRYPTOMUS_BASE_URL') ||
+      'https://api.cryptomus.com';
   }
 
   // ==================== Subscription Plan Management ====================
@@ -259,7 +273,13 @@ export class SubscriptionsService {
     // Generate payment URL based on chosen method
     let paymentUrl: string;
 
-    if (paymentMethod === PaymentMethod.BINANCE) {
+    if (paymentMethod === PaymentMethod.CRYPTOMUS) {
+      paymentUrl = await this.generateCryptomusPaymentUrl(
+        savedSubscription,
+        description,
+        user,
+      );
+    } else if (paymentMethod === PaymentMethod.BINANCE) {
       paymentUrl = await this.generateBinancePaymentUrl(
         savedSubscription,
         description,
@@ -759,6 +779,259 @@ export class SubscriptionsService {
     return subscription;
   }
 
+  // ==================== Cryptomus Payment ====================
+
+  private generateCryptomusSignature(
+    payload: string,
+    secret: string,
+  ): string {
+    return crypto
+      .createHash('md5')
+      .update(Buffer.from(payload).toString('base64') + secret)
+      .digest('hex');
+  }
+
+  private async generateCryptomusPaymentUrl(
+    subscription: Subscription,
+    description: string,
+    user?: any,
+  ): Promise<string> {
+    // Validate Cryptomus credentials
+    if (!this.cryptomusApiKey || !this.cryptomusApiKey.trim()) {
+      throw new BadRequestException('Cryptomus API key is not configured');
+    }
+    if (!this.cryptomusMerchantId || !this.cryptomusMerchantId.trim()) {
+      throw new BadRequestException('Cryptomus merchant ID is not configured');
+    }
+
+    const backendUrl =
+      this.configService.get<string>('BACKEND_URL') || 'http://localhost:3000';
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3001';
+    const callbackUrl =
+      this.configService.get<string>('CRYPTOMUS_CALLBACK_URL') ||
+      `${backendUrl}/subscriptions/cryptomus/callback`;
+    const returnUrl = `${frontendUrl}/dashboard/subscriptions/success?subscription_id=${subscription.id}`;
+
+    const amount = Number(subscription.amount);
+    if (!amount || amount <= 0 || isNaN(amount)) {
+      this.logger.error(
+        `Invalid payment amount: ${subscription.amount} (parsed: ${amount})`,
+      );
+      throw new BadRequestException('Invalid payment amount');
+    }
+
+    // Cryptomus invoice creation payload
+    const orderId = subscription.id;
+    const invoiceData = {
+      amount: amount.toFixed(2),
+      currency: 'USD',
+      order_id: orderId,
+      url_return: returnUrl,
+      url_callback: callbackUrl,
+      is_payment_multiple: false,
+      lifetime: 7200, // 2 hours in seconds
+      to_currency: 'USDT', // Default to USDT, user can change on payment page
+      subtract: 0,
+      accuracy_payment_percent: 0,
+      additional_data: description,
+      currencies: ['BTC', 'ETH', 'USDT', 'LTC', 'TRX'], // Supported cryptocurrencies
+      except_currencies: [],
+      network: null, // Let user choose network
+      address: null,
+      is_refresh: false,
+      customer_email: user?.email || undefined,
+    };
+
+    const payload = JSON.stringify(invoiceData);
+    const signature = this.generateCryptomusSignature(
+      payload,
+      this.cryptomusApiKey,
+    );
+
+    // Ensure merchant ID is trimmed
+    const merchantId = this.cryptomusMerchantId.trim();
+    
+    // Log merchant ID (partially masked for security)
+    const merchantIdPreview = merchantId.length > 8
+      ? `${merchantId.substring(0, 4)}...${merchantId.substring(merchantId.length - 4)}`
+      : '***';
+    
+    // Log API key preview (first 4 and last 4 chars)
+    const apiKeyPreview = this.cryptomusApiKey.length > 8
+      ? `${this.cryptomusApiKey.substring(0, 4)}...${this.cryptomusApiKey.substring(this.cryptomusApiKey.length - 4)}`
+      : '***';
+
+    this.logger.log(
+      `Cryptomus payment request: amount=${amount.toFixed(2)}, order_id=${orderId}, merchant_id=${merchantIdPreview}, merchant_id_length=${merchantId.length}, api_key_length=${this.cryptomusApiKey.length}`,
+    );
+
+    try {
+      const response = await fetch(
+        `${this.cryptomusBaseUrl}/v1/payment`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            merchant: merchantId,
+            sign: signature,
+          },
+          body: payload,
+        },
+      );
+
+      const responseText = await response.text();
+      let data: any;
+
+      try {
+        data = JSON.parse(responseText);
+      } catch (parseError) {
+        this.logger.error(
+          `Cryptomus API response is not JSON: ${responseText.substring(0, 200)}`,
+        );
+        throw new BadRequestException(
+          `Cryptomus API returned invalid response: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      if (data.state === 0 && data.result) {
+        subscription.cryptomusOrderId = orderId;
+        subscription.cryptomusInvoiceId = data.result.uuid || orderId;
+        await this.subscriptionRepository.save(subscription);
+
+        return data.result.url || '';
+      } else {
+        this.logger.error('Cryptomus payment URL generation failed:', {
+          state: data.state,
+          message: data.message,
+          response: data,
+          merchant_id_preview: merchantIdPreview,
+          merchant_id_length: merchantId.length,
+          api_endpoint: `${this.cryptomusBaseUrl}/v1/payment`,
+        });
+
+        // Provide helpful error message for "Merchant unknown" error
+        if (data.message && data.message.toLowerCase().includes('merchant unknown')) {
+          this.logger.error('Cryptomus Merchant Unknown Error Details:', {
+            merchant_id_preview: merchantIdPreview,
+            merchant_id_length: merchantId.length,
+            api_key_length: this.cryptomusApiKey.length,
+            api_key_preview: apiKeyPreview,
+            endpoint: `${this.cryptomusBaseUrl}/v1/payment`,
+            request_payload: JSON.parse(payload),
+          });
+          
+          throw new BadRequestException(
+            `Cryptomus error: Merchant unknown. Please verify:\n` +
+            `1. CRYPTOMUS_MERCHANT_ID is correct in your .env file (currently: ${merchantIdPreview}, length: ${merchantId.length})\n` +
+            `2. CRYPTOMUS_API_KEY matches the Merchant ID (same account)\n` +
+            `3. You're using a PAYMENT API key (not Payout API key) - Check Cryptomus dashboard\n` +
+            `4. Merchant ID matches the one shown in Cryptomus Business/Payment settings\n` +
+            `5. Your Cryptomus account is verified and active for API access\n` +
+            `6. API key and Merchant ID are from the same environment (test/production)\n` +
+            `\nNote: For accepting payments, you may need a "Payment API key" instead of "Payout API key".\n` +
+            `Check Cryptomus Business API documentation for the correct API key type.`,
+          );
+        }
+
+        throw new BadRequestException(
+          `Cryptomus error: ${data.message || 'Failed to generate payment URL'}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error('Cryptomus payment URL generation error:', {
+        error: error instanceof Error ? error.message : error,
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      throw new BadRequestException('Failed to generate Cryptomus payment URL');
+    }
+  }
+
+  verifyCryptomusWebhookSignature(
+    payload: string,
+    signature: string,
+  ): boolean {
+    const expectedSignature = this.generateCryptomusSignature(
+      payload,
+      this.cryptomusApiKey,
+    );
+    return expectedSignature === signature;
+  }
+
+  async handleCryptomusCallback(
+    callbackBody: any,
+    signature?: string,
+  ): Promise<Subscription> {
+    // Verify signature if provided
+    if (signature) {
+      const rawBody =
+        typeof callbackBody === 'string'
+          ? callbackBody
+          : JSON.stringify(callbackBody);
+      const isValid = this.verifyCryptomusWebhookSignature(
+        rawBody,
+        signature,
+      );
+      if (!isValid) {
+        this.logger.warn('Invalid Cryptomus webhook signature');
+        throw new BadRequestException('Invalid webhook signature');
+      }
+    }
+
+    // Parse the callback data
+    const orderId = callbackBody.order_id;
+    const paymentStatus = callbackBody.payment_status;
+
+    if (!orderId) {
+      this.logger.error(
+        'No order_id in Cryptomus callback:',
+        callbackBody,
+      );
+      throw new BadRequestException(
+        'Invalid callback data: missing order_id',
+      );
+    }
+
+    // Find subscription by order_id (which is the subscription ID)
+    const subscription = await this.subscriptionRepository.findOne({
+      where: { id: orderId },
+      relations: ['plan', 'machine', 'user'],
+    });
+
+    if (!subscription) {
+      this.logger.error(
+        `Subscription not found for order_id: ${orderId}`,
+      );
+      throw new NotFoundException('Subscription not found');
+    }
+
+    // Cryptomus payment statuses:
+    // - paid: Payment completed
+    // - paid_over: Overpaid
+    // - fail: Payment failed
+    // - process: Payment in process
+    // - confirm_check: Waiting for confirmation
+    // - refund_process: Refund in process
+    // - refund_fail: Refund failed
+    // - refund_paid: Refund completed
+    // - locked: Payment locked
+    // - expired: Payment expired
+
+    if (paymentStatus === 'paid' || paymentStatus === 'paid_over') {
+      await this.activateSubscription(subscription, orderId);
+    } else if (
+      paymentStatus === 'fail' ||
+      paymentStatus === 'expired' ||
+      paymentStatus === 'refund_paid'
+    ) {
+      subscription.status = SubscriptionStatus.CANCELLED;
+      await this.subscriptionRepository.save(subscription);
+    }
+    // For 'process' and 'confirm_check', we keep the subscription as PENDING
+
+    return subscription;
+  }
+
   // ==================== Shared Activation Logic ====================
 
   private async activateSubscription(
@@ -769,7 +1042,9 @@ export class SubscriptionsService {
     subscription.paidAt = new Date();
 
     // Store payment reference based on method
-    if (subscription.paymentMethod === PaymentMethod.BINANCE) {
+    if (subscription.paymentMethod === PaymentMethod.CRYPTOMUS) {
+      subscription.cryptomusOrderId = subscription.cryptomusOrderId || paymentRef;
+    } else if (subscription.paymentMethod === PaymentMethod.BINANCE) {
       subscription.binanceOrderId = subscription.binanceOrderId || paymentRef;
     } else {
       subscription.paytabsPaymentId = paymentRef;

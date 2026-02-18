@@ -61,6 +61,18 @@ export class SubscriptionsController {
     return { returnCode: 'SUCCESS', returnMessage: null };
   }
 
+  @Post('cryptomus/callback')
+  @ApiOperation({ summary: 'Cryptomus payment callback webhook' })
+  async handleCryptomusCallback(
+    @Body() callbackBody: any,
+    @Headers('sign') signature?: string,
+  ) {
+    return this.subscriptionsService.handleCryptomusCallback(
+      callbackBody,
+      signature,
+    );
+  }
+
   // ==================== Subscription Plan Management (Admin) ====================
 
   @Post('plans')

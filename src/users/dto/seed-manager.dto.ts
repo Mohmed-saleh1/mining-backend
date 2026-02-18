@@ -51,3 +51,5 @@ export class SeedManagerDto {
   @IsString()
   phone?: string;
 }
+
+
