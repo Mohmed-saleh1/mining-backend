@@ -40,6 +40,10 @@ export class BookingsService {
   ): number {
     let pricePerUnit: number;
     switch (duration) {
+      case RentalDuration.HOUR:
+        // Calculate hourly price from daily price (divide by 24)
+        pricePerUnit = Number(machine.pricePerDay) / 24;
+        break;
       case RentalDuration.DAY:
         pricePerUnit = Number(machine.pricePerDay);
         break;

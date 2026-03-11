@@ -27,9 +27,6 @@ export class ParseFormDataPipe implements PipeTransform {
       'sortOrder',
     ];
 
-    // List of boolean fields
-    const booleanFields = ['isActive', 'isFeatured'];
-
     // Convert numeric fields
     numericFields.forEach((field) => {
       if (transformed[field] !== undefined && transformed[field] !== null) {
@@ -74,24 +71,6 @@ export class ParseFormDataPipe implements PipeTransform {
               transformed[field] = 0;
             }
           }
-        }
-      }
-    });
-
-    // Convert boolean fields
-    booleanFields.forEach((field) => {
-      if (transformed[field] !== undefined && transformed[field] !== null) {
-        // If already a boolean, skip conversion
-        if (typeof transformed[field] === 'boolean') {
-          return;
-        }
-
-        if (transformed[field] === '') {
-          // Empty string - remove for optional fields
-          delete transformed[field];
-        } else if (typeof transformed[field] === 'string') {
-          transformed[field] =
-            transformed[field] === 'true' || transformed[field] === '1';
         }
       }
     });
