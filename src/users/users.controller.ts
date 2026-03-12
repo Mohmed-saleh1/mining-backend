@@ -159,9 +159,9 @@ export class UsersController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Get user by ID (Admin only)' })
+  @ApiOperation({ summary: 'Get user by ID (Admin/Manager only)' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({ status: 200, description: 'User retrieved successfully' })
   async findOne(@Param('id') id: string) {
@@ -174,9 +174,9 @@ export class UsersController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Update user (Admin only)' })
+  @ApiOperation({ summary: 'Update user (Admin/Manager only)' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({ status: 200, description: 'User updated successfully' })
   async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
@@ -186,10 +186,10 @@ export class UsersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth('JWT-auth')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete user (Admin only)' })
+  @ApiOperation({ summary: 'Delete user (Admin/Manager only)' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({ status: 204, description: 'User deleted successfully' })
   async remove(@Param('id') id: string) {
@@ -198,9 +198,9 @@ export class UsersController {
 
   @Post(':id/deactivate')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Deactivate user (Admin only)' })
+  @ApiOperation({ summary: 'Deactivate user (Admin/Manager only)' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({ status: 200, description: 'User deactivated successfully' })
   async deactivate(@Param('id') id: string) {
@@ -210,9 +210,9 @@ export class UsersController {
 
   @Post(':id/activate')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiBearerAuth('JWT-auth')
-  @ApiOperation({ summary: 'Activate user (Admin only)' })
+  @ApiOperation({ summary: 'Activate user (Admin/Manager only)' })
   @ApiParam({ name: 'id', description: 'User ID (UUID)' })
   @ApiResponse({ status: 200, description: 'User activated successfully' })
   async activate(@Param('id') id: string) {

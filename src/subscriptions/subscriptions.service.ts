@@ -207,6 +207,23 @@ export class SubscriptionsService {
     subscription: Subscription;
     paymentUrl: string;
   }> {
+    // Check if user's email is verified
+    const currentUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!currentUser.emailVerified) {
+      throw new BadRequestException({
+        message: 'Email verification required',
+        errorCode: 'SUBSCRIPTION_001',
+        errorDescription: 'Please verify your email address before creating subscriptions',
+      });
+    }
+
     const machine = await this.machineRepository.findOne({
       where: { id: createDto.machineId },
     });
@@ -247,7 +264,7 @@ export class SubscriptionsService {
     const totalPrice = unitPrice * number * quantity;
 
     // Get user for payment details
-    const user = await this.userRepository.findOne({ where: { id: userId } });
+    const userForPayment = await this.userRepository.findOne({ where: { id: userId } });
 
     const paymentMethod = createDto.paymentMethod || PaymentMethod.PAYTABS;
 
@@ -277,19 +294,19 @@ export class SubscriptionsService {
       paymentUrl = await this.generateCryptomusPaymentUrl(
         savedSubscription,
         description,
-        user,
+        userForPayment,
       );
     } else if (paymentMethod === PaymentMethod.BINANCE) {
       paymentUrl = await this.generateBinancePaymentUrl(
         savedSubscription,
         description,
-        user,
+        userForPayment,
       );
     } else {
       paymentUrl = await this.generatePaytabsPaymentUrl(
         savedSubscription,
         description,
-        user,
+        userForPayment,
       );
     }
 

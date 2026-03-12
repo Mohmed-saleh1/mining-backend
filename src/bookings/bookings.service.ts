@@ -31,6 +31,8 @@ export class BookingsService {
     private readonly messageRepository: Repository<BookingMessage>,
     @InjectRepository(MiningMachine)
     private readonly machineRepository: Repository<MiningMachine>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   private calculatePrice(
@@ -60,6 +62,23 @@ export class BookingsService {
   }
 
   async create(userId: string, createDto: CreateBookingDto): Promise<Booking> {
+    // Check if user's email is verified
+    const currentUser = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!currentUser) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!currentUser.emailVerified) {
+      throw new BadRequestException({
+        message: 'Email verification required',
+        errorCode: 'BOOKING_001',
+        errorDescription: 'Please verify your email address before creating bookings',
+      });
+    }
+
     const machine = await this.machineRepository.findOne({
       where: { id: createDto.machineId },
     });
