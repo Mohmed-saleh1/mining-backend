@@ -96,8 +96,8 @@ export class AuthService {
     // Initialize wallets for the new user
     await this.walletsService.initializeWalletsForUser(user.id);
 
-    // Generate email verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Generate email verification token (16 bytes = 32 hex chars to keep URL short and avoid email link wrapping)
+    const verificationToken = crypto.randomBytes(16).toString('hex');
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours
 
@@ -208,9 +208,8 @@ export class AuthService {
   }
 
   async verifyEmail(verifyEmailDto: VerifyEmailDto): Promise<void> {
-    const user = await this.usersService.findByEmailVerificationToken(
-      verifyEmailDto.token,
-    );
+    const token = (verifyEmailDto.token || '').trim();
+    const user = await this.usersService.findByEmailVerificationToken(token);
 
     if (!user) {
       throw new BadRequestException({
@@ -218,6 +217,11 @@ export class AuthService {
         errorCode: 'AUTH_005',
         errorDescription: 'The email verification token is invalid',
       });
+    }
+
+    if (user.emailVerified) {
+      await this.usersService.clearEmailVerificationToken(user.id);
+      return;
     }
 
     if (
@@ -251,8 +255,8 @@ export class AuthService {
       });
     }
 
-    // Generate new verification token
-    const verificationToken = crypto.randomBytes(32).toString('hex');
+    // Generate new verification token (16 bytes to keep email link short)
+    const verificationToken = crypto.randomBytes(16).toString('hex');
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 24 hours
 

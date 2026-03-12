@@ -103,7 +103,8 @@ export class EmailService {
   }
 
   async sendEmailVerification(email: string, token: string): Promise<void> {
-    const verificationUrl = `${this.frontendUrl}/verify-email?token=${token}`;
+    const base = this.frontendUrl.replace(/\/$/, '');
+    const verificationUrl = `${base}/en/verify-email?token=${encodeURIComponent(token)}`;
 
     const content = `
       <table role="presentation" style="width: 100%; border-collapse: collapse;">

@@ -163,6 +163,11 @@ export class UsersService {
   async verifyEmail(id: string): Promise<void> {
     await this.userRepository.update(id, {
       emailVerified: true,
+    });
+  }
+
+  async clearEmailVerificationToken(id: string): Promise<void> {
+    await this.userRepository.update(id, {
       emailVerificationToken: undefined,
       emailVerificationTokenExpires: undefined,
     });
