@@ -98,19 +98,7 @@ export class UsersController {
     @Request() req: { user: { role: UserRole } },
     @Body() createUserDto: CreateUserDto,
   ) {
-    // Managers can only create admin users
-    if (req.user.role === UserRole.MANAGER) {
-      if (createUserDto.role && createUserDto.role !== UserRole.ADMIN) {
-        throw new BadRequestException({
-          message: 'Managers can only create admin users',
-          errorCode: 'USER_003',
-          errorDescription: 'Managers are only allowed to create users with admin role',
-        });
-      }
-      // Force role to ADMIN if manager is creating
-      createUserDto.role = UserRole.ADMIN;
-    }
-
+    // Both admins and managers can create users with any role
     const user = await this.usersService.create(createUserDto);
     return BaseResponseDto.success('User created successfully', user);
   }
