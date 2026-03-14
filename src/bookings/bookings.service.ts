@@ -611,8 +611,8 @@ export class BookingsService {
       SELECT 
         s.*,
         m.name as machine_name,
-        m."miningCoin" as mining_coin,
-        m."dailyProfit" as daily_profit
+        m.mining_coin as mining_coin,
+        m.profit_per_day as daily_profit
       FROM subscriptions s
       LEFT JOIN mining_machines m ON s.machine_id = m.id
       WHERE s.user_id = $1
