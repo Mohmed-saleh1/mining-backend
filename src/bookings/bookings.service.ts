@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, EntityManager } from 'typeorm';
 import {
   Booking,
   BookingStatus,
@@ -33,6 +33,7 @@ export class BookingsService {
     private readonly machineRepository: Repository<MiningMachine>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly entityManager: EntityManager,
   ) {}
 
   private calculatePrice(
@@ -536,6 +537,14 @@ export class BookingsService {
     activeBookings: number;
     bookingsByStatus: Record<BookingStatus, number>;
     revenueByMonth: Array<{ month: string; revenue: number }>;
+    subscriptionMetrics: {
+      totalSubscriptions: number;
+      activeSubscriptions: number;
+      totalSubscriptionValue: number;
+      monthlyEarnings: number;
+      subscriptionsByStatus: Record<string, number>;
+      avgDailyEarnings: number;
+    };
   }> {
     const bookings = await this.bookingRepository.find({
       where: { userId },
@@ -597,6 +606,49 @@ export class BookingsService {
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
       .map(({ month, revenue }) => ({ month, revenue }));
 
+    // Get subscription analytics
+    const subscriptions = await this.entityManager.query(`
+      SELECT 
+        s.*,
+        m.name as machine_name,
+        m."miningCoin" as mining_coin,
+        m."dailyProfit" as daily_profit
+      FROM subscriptions s
+      LEFT JOIN mining_machines m ON s."machineId" = m.id
+      WHERE s."userId" = $1
+      ORDER BY s."createdAt" DESC
+    `, [userId]);
+
+    const totalSubscriptions = subscriptions.length;
+    const activeSubscriptions = subscriptions.filter(s => s.status === 'active');
+    const totalSubscriptionValue = subscriptions.reduce((sum, s) => sum + Number(s.amount || 0), 0);
+    
+    // Calculate monthly earnings from active subscriptions
+    let monthlyEarnings = 0;
+    let avgDailyEarnings = 0;
+    
+    activeSubscriptions.forEach(subscription => {
+      const dailyProfit = Number(subscription.daily_profit || 0);
+      const quantity = Number(subscription.quantity || 1);
+      const subscriptionDailyEarnings = dailyProfit * quantity;
+      
+      avgDailyEarnings += subscriptionDailyEarnings;
+      monthlyEarnings += subscriptionDailyEarnings * 30; // Approximate monthly
+    });
+
+    // Count subscriptions by status
+    const subscriptionsByStatus = subscriptions.reduce((acc, sub) => {
+      acc[sub.status] = (acc[sub.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Initialize missing statuses
+    ['pending', 'active', 'expired', 'cancelled'].forEach(status => {
+      if (!subscriptionsByStatus[status]) {
+        subscriptionsByStatus[status] = 0;
+      }
+    });
+
     return {
       totalBookings,
       totalInvestment,
@@ -604,6 +656,14 @@ export class BookingsService {
       activeBookings,
       bookingsByStatus,
       revenueByMonth,
+      subscriptionMetrics: {
+        totalSubscriptions,
+        activeSubscriptions: activeSubscriptions.length,
+        totalSubscriptionValue,
+        monthlyEarnings,
+        subscriptionsByStatus,
+        avgDailyEarnings,
+      },
     };
   }
 }
