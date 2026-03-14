@@ -614,9 +614,9 @@ export class BookingsService {
         m."miningCoin" as mining_coin,
         m."dailyProfit" as daily_profit
       FROM subscriptions s
-      LEFT JOIN mining_machines m ON s."machineId" = m.id
-      WHERE s."userId" = $1
-      ORDER BY s."createdAt" DESC
+      LEFT JOIN mining_machines m ON s.machine_id = m.id
+      WHERE s.user_id = $1
+      ORDER BY s.created_at DESC
     `, [userId]);
 
     const totalSubscriptions = subscriptions.length;
