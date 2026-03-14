@@ -21,6 +21,7 @@ import {
 } from './dto/update-booking.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
 import { User } from '../users/entities/user.entity';
+import { Subscription } from '../subscriptions/entities/subscription.entity';
 
 @Injectable()
 export class BookingsService {
@@ -606,18 +607,14 @@ export class BookingsService {
       .sort((a, b) => a.sortKey.localeCompare(b.sortKey))
       .map(({ month, revenue }) => ({ month, revenue }));
 
-    // Get subscription analytics
-    const subscriptions = await this.entityManager.query(`
-      SELECT 
-        s.*,
-        m.name as machine_name,
-        m.mining_coin as mining_coin,
-        m.profit_per_day as daily_profit
-      FROM subscriptions s
-      LEFT JOIN mining_machines m ON s.machine_id = m.id
-      WHERE s.user_id = $1
-      ORDER BY s.created_at DESC
-    `, [userId]);
+    // Get subscription analytics using TypeORM repository for type safety
+    const subscriptions = await this.entityManager
+      .getRepository('Subscription')
+      .createQueryBuilder('s')
+      .leftJoinAndSelect('s.machine', 'm')
+      .where('s.userId = :userId', { userId })
+      .orderBy('s.createdAt', 'DESC')
+      .getMany();
 
     const totalSubscriptions = subscriptions.length;
     const activeSubscriptions = subscriptions.filter(s => s.status === 'active');
@@ -628,7 +625,7 @@ export class BookingsService {
     let avgDailyEarnings = 0;
     
     activeSubscriptions.forEach(subscription => {
-      const dailyProfit = Number(subscription.daily_profit || 0);
+      const dailyProfit = Number(subscription.machine?.profitPerDay || 0);
       const quantity = Number(subscription.quantity || 1);
       const subscriptionDailyEarnings = dailyProfit * quantity;
       
