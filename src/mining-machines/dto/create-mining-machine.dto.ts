@@ -9,7 +9,7 @@ import {
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { MachineType, MachineStatus } from '../entities/mining-machine.entity';
+import { MachineType, MachineStatus, WithdrawalFrequency } from '../entities/mining-machine.entity';
 
 export class CreateMiningMachineDto {
   @ApiProperty({ example: 'Antminer S19 Pro' })
@@ -185,4 +185,13 @@ export class CreateMiningMachineDto {
   @Type(() => Number)
   @IsNumber()
   sortOrder?: number;
+
+  @ApiPropertyOptional({
+    enum: WithdrawalFrequency,
+    default: WithdrawalFrequency.MONTHLY,
+    description: 'How users can withdraw profit for this machine: daily, weekly, or monthly',
+  })
+  @IsEnum(WithdrawalFrequency)
+  @IsOptional()
+  withdrawalFrequency?: WithdrawalFrequency;
 }

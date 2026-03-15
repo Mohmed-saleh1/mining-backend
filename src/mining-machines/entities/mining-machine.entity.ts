@@ -18,6 +18,12 @@ export enum MachineType {
   GPU = 'gpu',
 }
 
+export enum WithdrawalFrequency {
+  DAILY = 'daily',
+  WEEKLY = 'weekly',
+  MONTHLY = 'monthly',
+}
+
 @Entity('mining_machines')
 export class MiningMachine {
   @PrimaryGeneratedColumn('uuid')
@@ -109,6 +115,14 @@ export class MiningMachine {
 
   @Column({ type: 'int', default: 0 })
   sortOrder: number;
+
+  @Column({
+    type: 'enum',
+    enum: WithdrawalFrequency,
+    default: WithdrawalFrequency.MONTHLY,
+    nullable: true,
+  })
+  withdrawalFrequency: WithdrawalFrequency;
 
   @CreateDateColumn()
   createdAt: Date;
