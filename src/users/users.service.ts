@@ -3,10 +3,13 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
+import { WalletsService } from '../wallets/wallets.service';
 import {
   CreateUserDto,
   UpdateUserDto,
@@ -23,6 +26,8 @@ export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @Inject(forwardRef(() => WalletsService))
+    private readonly walletsService: WalletsService,
   ) {}
 
   async create(createUserDto: CreateUserDto): Promise<UserResponseDto> {
@@ -67,6 +72,49 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepository.findOne({ where: { email } });
+  }
+
+  async findByGoogleId(googleId: string): Promise<User | null> {
+    return this.userRepository.findOne({ where: { googleId } });
+  }
+
+  async createOrUpdateFromGoogle(profile: {
+    googleId: string;
+    email: string;
+    firstName: string;
+    lastName: string;
+    avatar?: string;
+  }): Promise<User> {
+    let user = await this.findByGoogleId(profile.googleId);
+    if (user) {
+      await this.updateLastLogin(user.id);
+      return this.findOne(user.id);
+    }
+
+    user = await this.findByEmail(profile.email);
+    if (user) {
+      user.googleId = profile.googleId;
+      user.authProvider = 'google';
+      if (profile.avatar) user.avatar = profile.avatar;
+      user.emailVerified = true;
+      const saved = await this.userRepository.save(user);
+      await this.updateLastLogin(saved.id);
+      return saved;
+    }
+
+    const newUser = this.userRepository.create({
+      email: profile.email,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      avatar: profile.avatar,
+      googleId: profile.googleId,
+      authProvider: 'google',
+      emailVerified: true,
+      isActive: true,
+    });
+    const saved = await this.userRepository.save(newUser);
+    await this.walletsService.initializeWalletsForUser(saved.id);
+    return saved;
   }
 
   async update(

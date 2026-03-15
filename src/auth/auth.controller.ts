@@ -7,6 +7,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Res,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -14,6 +15,7 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
+import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -24,12 +26,18 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { BaseResponseDto } from '../shared/dto/base-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { RequestUser } from './interfaces/jwt-payload.interface';
+import { ConfigService } from '@nestjs/config';
+import { User } from '../users/entities/user.entity';
 
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('login')
   @ApiOperation({ summary: 'Login user' })
@@ -191,5 +199,39 @@ export class AuthController {
       'Verified user created successfully. You can now login with these credentials.',
       result,
     );
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ summary: 'Initiate Google OAuth login' })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to Google consent screen',
+  })
+  async googleAuth() {
+    // Guard redirects to Google
+  }
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard)
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiResponse({
+    status: 302,
+    description: 'Redirects to frontend with JWT token',
+  })
+  async googleAuthCallback(
+    @Request() req: { user: User },
+    @Res() res: Response,
+  ) {
+    const result = await this.authService.loginWithUser(req.user);
+    const explicitRedirect = this.configService.get<string>('GOOGLE_CALLBACK_REDIRECT_URI');
+    const isDevelopment = this.configService.get<string>('NODE_ENV') !== 'production';
+    const frontendUrl = explicitRedirect
+      ? explicitRedirect
+      : isDevelopment
+        ? (this.configService.get<string>('FRONTEND_URL_LOCAL') || 'http://localhost:3001')
+        : (this.configService.get<string>('FRONTEND_URL') || 'https://x-bin.com');
+    const redirectUrl = `${frontendUrl}/en/auth/google/callback?token=${result.accessToken}`;
+    res.redirect(redirectUrl);
   }
 }

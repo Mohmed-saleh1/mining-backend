@@ -23,8 +23,14 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
-  password: string;
+  @Column({ type: 'varchar', nullable: true })
+  password: string | null;
+
+  @Column({ nullable: true, unique: true })
+  googleId: string;
+
+  @Column({ type: 'varchar', default: 'local' })
+  authProvider: 'local' | 'google';
 
   @Column()
   firstName: string;
@@ -81,6 +87,7 @@ export class User {
   }
 
   async validatePassword(password: string): Promise<boolean> {
+    if (!this.password) return false;
     return bcrypt.compare(password, this.password);
   }
 

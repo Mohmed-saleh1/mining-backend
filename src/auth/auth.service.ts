@@ -273,6 +273,30 @@ export class AuthService {
     );
   }
 
+  async loginWithUser(user: User): Promise<AuthResponse> {
+    if (!user.isActive) {
+      throw new UnauthorizedException({
+        message: 'Account is deactivated',
+        errorCode: 'AUTH_002',
+        errorDescription:
+          'Your account has been deactivated. Please contact support.',
+      });
+    }
+
+    const payload: JwtPayload = {
+      email: user.email,
+      sub: user.id,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    return {
+      user: UserResponseDto.fromEntity(user),
+      accessToken,
+    };
+  }
+
   async createVerifiedUser(
     createVerifiedUserDto: CreateVerifiedUserDto,
   ): Promise<AuthResponse> {
