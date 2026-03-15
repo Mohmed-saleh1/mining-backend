@@ -538,6 +538,12 @@ export class BookingsService {
     activeBookings: number;
     bookingsByStatus: Record<BookingStatus, number>;
     revenueByMonth: Array<{ month: string; revenue: number }>;
+    revenueBreakdown: {
+      today: number;
+      lastWeek: number;
+      lastMonth: number;
+      incoming: number;
+    };
     subscriptionMetrics: {
       totalSubscriptions: number;
       activeSubscriptions: number;
@@ -646,6 +652,93 @@ export class BookingsService {
       }
     });
 
+    // Revenue breakdown: today, last week, last month, incoming
+    // Daily revenue per unit = profitPerDay + (pricePerMonth/30)
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayEnd = new Date(todayStart);
+    todayEnd.setDate(todayEnd.getDate() + 1);
+    const weekAgo = new Date(todayStart);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthAgo = new Date(todayStart);
+    monthAgo.setDate(monthAgo.getDate() - 30);
+
+    const getDailyRevenue = (machine: MiningMachine, quantity: number): number => {
+      const profitPerDay = Number(machine?.profitPerDay || 0);
+      const pricePerMonth = Number(machine?.pricePerMonth || 0);
+      return (profitPerDay + pricePerMonth / 30) * quantity;
+    };
+
+    const isDateInRange = (date: Date, start: Date, end: Date): boolean =>
+      date >= start && date < end;
+
+    let revenueToday = 0;
+    let revenueLastWeek = 0;
+    let revenueLastMonth = 0;
+    let revenueIncoming = 0;
+
+    // From active subscriptions
+    activeSubscriptions.forEach((sub) => {
+      const dailyRate = getDailyRevenue(sub.machine, Number(sub.quantity || 1));
+      const start = sub.startDate ? new Date(sub.startDate) : new Date(sub.createdAt);
+      let end: Date;
+      if (sub.endDate) {
+        end = new Date(sub.endDate);
+      } else {
+        end = new Date(start);
+        end.setDate(end.getDate() + 30); // assume 30 days if no endDate
+      }
+
+      if (isDateInRange(todayStart, start, end)) revenueToday += dailyRate;
+
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(weekAgo);
+        day.setDate(day.getDate() + d);
+        if (isDateInRange(day, start, end)) revenueLastWeek += dailyRate;
+      }
+      for (let d = 0; d < 30; d++) {
+        const day = new Date(monthAgo);
+        day.setDate(day.getDate() + d);
+        if (isDateInRange(day, start, end)) revenueLastMonth += dailyRate;
+      }
+      if (end > todayEnd) {
+        const daysRemaining = Math.ceil((end.getTime() - todayEnd.getTime()) / (24 * 60 * 60 * 1000));
+        revenueIncoming += dailyRate * Math.max(0, daysRemaining);
+      }
+    });
+
+    // From approved bookings (rental period from approvedAt)
+    const durationDays: Record<string, number> = {
+      hour: 1 / 24,
+      day: 1,
+      week: 7,
+      month: 30,
+    };
+    approvedBookings.forEach((booking) => {
+      const start = new Date(booking.approvedAt || booking.createdAt);
+      const days = durationDays[booking.rentalDuration] ?? 1;
+      const end = new Date(start);
+      end.setDate(end.getDate() + days);
+      const dailyRate = getDailyRevenue(booking.machine, booking.quantity);
+
+      if (isDateInRange(todayStart, start, end)) revenueToday += dailyRate;
+
+      for (let d = 0; d < 7; d++) {
+        const day = new Date(weekAgo);
+        day.setDate(day.getDate() + d);
+        if (isDateInRange(day, start, end)) revenueLastWeek += dailyRate;
+      }
+      for (let d = 0; d < 30; d++) {
+        const day = new Date(monthAgo);
+        day.setDate(day.getDate() + d);
+        if (isDateInRange(day, start, end)) revenueLastMonth += dailyRate;
+      }
+      if (end > todayEnd) {
+        const daysRemaining = Math.ceil((end.getTime() - todayEnd.getTime()) / (24 * 60 * 60 * 1000));
+        revenueIncoming += dailyRate * Math.min(daysRemaining, days);
+      }
+    });
+
     return {
       totalBookings,
       totalInvestment,
@@ -653,6 +746,12 @@ export class BookingsService {
       activeBookings,
       bookingsByStatus,
       revenueByMonth,
+      revenueBreakdown: {
+        today: Math.round(revenueToday * 100) / 100,
+        lastWeek: Math.round(revenueLastWeek * 100) / 100,
+        lastMonth: Math.round(revenueLastMonth * 100) / 100,
+        incoming: Math.round(revenueIncoming * 100) / 100,
+      },
       subscriptionMetrics: {
         totalSubscriptions,
         activeSubscriptions: activeSubscriptions.length,
