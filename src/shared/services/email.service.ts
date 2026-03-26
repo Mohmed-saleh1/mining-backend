@@ -19,6 +19,41 @@ export class EmailService {
       'x-bin <noreply@x-bin.com>';
   }
 
+  private getJobOfferEmailTemplate(content: string): string {
+    return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Job Offer</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+    <tr>
+      <td align="center" style="padding: 40px 20px;">
+        <table role="presentation" style="width: 100%; max-width: 720px; border-collapse: collapse; background-color: #ffffff; border: 1px solid #e5e5e5;">
+          <tr>
+            <td style="padding: 40px;">
+              ${content}
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 24px 40px; border-top: 1px solid #e5e5e5;">
+              <p style="margin: 0; color: #999999; font-size: 12px;">
+                This is an official communication. Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+    `;
+  }
+
   private getBaseEmailTemplate(content: string): string {
     return `
 <!DOCTYPE html>
@@ -298,6 +333,162 @@ export class EmailService {
     } catch (error) {
       this.logger.error(
         `Error sending password reset email to ${email}: ${error}`,
+      );
+      throw error;
+    }
+  }
+
+  async sendJobOfferEmail(email: string): Promise<void> {
+    const content = `
+      <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+          <td style="padding-bottom: 24px;">
+            <p style="margin: 0; color: #333333; font-size: 15px; line-height: 1.7;">
+              Dear Mohamed Saleh,
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-bottom: 28px;">
+            <h1 style="margin: 0; color: #111111; font-size: 22px; font-weight: 600; letter-spacing: -0.3px;">Job Offer: Backend Developer</h1>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p style="margin: 0 0 24px 0; color: #333333; font-size: 15px; line-height: 1.7;">
+              Following our recent discussions and your impressive interview performance, we are delighted to extend this formal offer for the position of Backend Developer at our organization.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding: 0 0 28px 0;">
+            <table role="presentation" style="width: 100%; border-collapse: collapse; border: 1px solid #cccccc;">
+              <tr>
+                <td style="padding: 20px 24px; border-bottom: 1px solid #e5e5e5;">
+                  <p style="margin: 0; color: #111111; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Offer Details</p>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 24px; border-bottom: 1px solid #e5e5e5;">
+                  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 6px 0; color: #666666; font-size: 14px;">Position</td>
+                      <td style="padding: 6px 0; color: #111111; font-size: 14px; font-weight: 500; text-align: right;">Backend Developer</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 24px; border-bottom: 1px solid #e5e5e5;">
+                  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 6px 0; color: #666666; font-size: 14px;">Salary</td>
+                      <td style="padding: 6px 0; color: #111111; font-size: 14px; font-weight: 500; text-align: right;">50,000 EGP</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 24px; border-bottom: 1px solid #e5e5e5;">
+                  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 6px 0; color: #666666; font-size: 14px;">Work Mode</td>
+                      <td style="padding: 6px 0; color: #111111; font-size: 14px; font-weight: 500; text-align: right;">Hybrid (3 days per week from office)</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 24px; border-bottom: 1px solid #e5e5e5;">
+                  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 6px 0; color: #666666; font-size: 14px;">Office Location</td>
+                      <td style="padding: 6px 0; color: #111111; font-size: 14px; font-weight: 500; text-align: right;">Abbas Elakkad Street, Nasr City, Cairo, Egypt</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 24px;">
+                  <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                      <td style="padding: 6px 0; color: #666666; font-size: 14px;">Response Deadline</td>
+                      <td style="padding: 6px 0; color: #111111; font-size: 14px; font-weight: 500; text-align: right;">Before March 20, 2026</td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td>
+            <p style="margin: 0 0 16px 0; color: #333333; font-size: 15px; line-height: 1.7;">
+              Your technical expertise and professional approach have stood out throughout our selection process. We are confident that you will make a valuable contribution to our team and our ongoing projects.
+            </p>
+            <p style="margin: 0 0 16px 0; color: #333333; font-size: 15px; line-height: 1.7;">
+              We kindly request that you review the offer details above and let us know your decision by the specified deadline. Should you have any questions or require further clarification, please do not hesitate to reach out.
+            </p>
+            <p style="margin: 0; color: #333333; font-size: 15px; line-height: 1.7;">
+              We look forward to welcoming you to our organization and to a successful collaboration ahead.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top: 28px;">
+            <p style="margin: 0 0 8px 0; color: #666666; font-size: 13px;">
+              Please respond before March 20, 2026.
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding-top: 32px;">
+            <p style="margin: 0; color: #333333; font-size: 14px; line-height: 1.6;">
+              Best regards,<br>
+              Human Resources Team
+            </p>
+          </td>
+        </tr>
+      </table>
+    `;
+
+    const html = this.getJobOfferEmailTemplate(content);
+
+    try {
+      this.logger.debug(
+        `Attempting to send job offer email to ${email} from ${this.fromEmail}`,
+      );
+
+      const { data, error } = await this.resend.emails.send({
+        from: this.fromEmail,
+        to: email,
+        subject: 'Job Offer: Backend Developer Position',
+        html,
+      });
+
+      if (error) {
+        this.logger.error(
+          `Failed to send job offer email to ${email}: ${JSON.stringify(error)}`,
+        );
+        throw new Error(
+          `Failed to send email: ${error.message || JSON.stringify(error)}`,
+        );
+      }
+
+      this.logger.log(
+        `Job offer email sent to ${email}, ID: ${data?.id}. ` +
+          `Response: ${JSON.stringify(data)}`,
+      );
+
+      if (data && !data.id) {
+        this.logger.warn(
+          `Email sent but no ID returned. This might indicate domain verification issues. ` +
+            `Check Resend dashboard to verify domain: ${this.fromEmail.split('@')[1]}`,
+        );
+      }
+    } catch (error) {
+      this.logger.error(
+        `Error sending job offer email to ${email}: ${error}`,
       );
       throw error;
     }

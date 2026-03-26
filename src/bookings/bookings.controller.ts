@@ -9,6 +9,8 @@ import {
   UseGuards,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -16,7 +18,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
   ApiQuery,
+  ApiConsumes,
 } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { BookingsService } from './bookings.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import {
@@ -24,6 +28,10 @@ import {
   MarkPaymentSentDto,
 } from './dto/update-booking.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
+import {
+  CreateReceivingAddressDto,
+  UpdateReceivingAddressDto,
+} from './dto/receiving-address.dto';
 import {
   BookingResponseDto,
   BookingStatisticsDto,
@@ -82,6 +90,22 @@ export class BookingsController {
       success: true,
       data,
       message: 'Bookings retrieved successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('receiving-addresses')
+  @ApiOperation({
+    summary:
+      'Get active booking receiving addresses with network type (User/Admin/Manager)',
+  })
+  async getReceivingAddresses() {
+    const data = await this.bookingsService.getReceivingAddresses(false);
+
+    return {
+      success: true,
+      data,
+      message: 'Receiving addresses retrieved successfully',
       timestamp: new Date().toISOString(),
     };
   }
@@ -197,6 +221,38 @@ export class BookingsController {
     };
   }
 
+  @Post('my-bookings/:id/messages/image')
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({
+    summary: 'Upload payment screenshot in booking chat (User)',
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Image message sent successfully',
+  })
+  async sendUserImageMessage(
+    @CurrentUser() user: RequestUser,
+    @Param('id') bookingId: string,
+    @UploadedFile() image: Express.Multer.File,
+    @Body('content') content?: string,
+  ) {
+    const data = await this.bookingsService.sendImageMessage(
+      bookingId,
+      user.userId,
+      image,
+      content,
+      false,
+    );
+
+    return {
+      success: true,
+      data,
+      message: 'Image message sent successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
   @Get('my-bookings/:id/messages')
   @ApiOperation({ summary: 'Get messages for a booking (User)' })
   @ApiResponse({
@@ -266,7 +322,7 @@ export class BookingsController {
 
   @Get('admin')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get all bookings (Admin)' })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
@@ -296,7 +352,7 @@ export class BookingsController {
 
   @Get('admin/statistics')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get booking statistics (Admin)' })
   @ApiResponse({
     status: 200,
@@ -316,7 +372,7 @@ export class BookingsController {
 
   @Get('admin/unread-count')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get unread message count (Admin)' })
   @ApiResponse({
     status: 200,
@@ -335,7 +391,7 @@ export class BookingsController {
 
   @Get('admin/:id')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get a specific booking (Admin)' })
   @ApiResponse({
     status: 200,
@@ -357,7 +413,7 @@ export class BookingsController {
 
   @Put('admin/:id/send-payment-address')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Send payment address to user (Admin)' })
   @ApiResponse({
     status: 200,
@@ -385,7 +441,7 @@ export class BookingsController {
 
   @Put('admin/:id/approve')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Approve a booking (Admin)' })
   @ApiResponse({
     status: 200,
@@ -413,7 +469,7 @@ export class BookingsController {
 
   @Put('admin/:id/reject')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Reject a booking (Admin)' })
   @ApiResponse({
     status: 200,
@@ -441,7 +497,7 @@ export class BookingsController {
 
   @Post('admin/:id/messages')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Send a message in booking chat (Admin)' })
   @ApiResponse({
     status: 201,
@@ -469,7 +525,7 @@ export class BookingsController {
 
   @Get('admin/:id/messages')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Get messages for a booking (Admin)' })
   @ApiResponse({
     status: 200,
@@ -495,7 +551,7 @@ export class BookingsController {
 
   @Put('admin/:id/messages/mark-read')
   @UseGuards(RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
   @ApiOperation({ summary: 'Mark messages as read (Admin)' })
   @ApiResponse({
     status: 200,
@@ -511,6 +567,138 @@ export class BookingsController {
       success: true,
       data: null,
       message: 'Messages marked as read',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('admin/settings/receiving-addresses')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Get all booking receiving addresses (Manager)' })
+  async getAdminReceivingAddresses() {
+    const data = await this.bookingsService.getReceivingAddresses(true);
+
+    return {
+      success: true,
+      data,
+      message: 'Receiving addresses retrieved successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post('admin/settings/receiving-addresses')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Create booking receiving address (Manager)' })
+  async createReceivingAddress(
+    @CurrentUser() user: RequestUser,
+    @Body() dto: CreateReceivingAddressDto,
+  ) {
+    const data = await this.bookingsService.createReceivingAddress(
+      user.userId,
+      dto,
+    );
+
+    return {
+      success: true,
+      data,
+      message: 'Receiving address created successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Put('admin/settings/receiving-addresses/:id')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Update booking receiving address (Manager)' })
+  async updateReceivingAddress(
+    @Param('id') id: string,
+    @Body() dto: UpdateReceivingAddressDto,
+  ) {
+    const data = await this.bookingsService.updateReceivingAddress(id, dto);
+
+    return {
+      success: true,
+      data,
+      message: 'Receiving address updated successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post('admin/:id/messages/image')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload image in booking chat (Admin/Manager)' })
+  async sendAdminImageMessage(
+    @CurrentUser() user: RequestUser,
+    @Param('id') bookingId: string,
+    @UploadedFile() image: Express.Multer.File,
+    @Body('content') content?: string,
+  ) {
+    const data = await this.bookingsService.sendImageMessage(
+      bookingId,
+      user.userId,
+      image,
+      content,
+      true,
+    );
+
+    return {
+      success: true,
+      data,
+      message: 'Image message sent successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Put('admin/settings/receiving-addresses/:id/delete')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.MANAGER)
+  @ApiOperation({ summary: 'Delete booking receiving address (Manager)' })
+  async deleteReceivingAddress(@Param('id') id: string) {
+    await this.bookingsService.removeReceivingAddress(id);
+
+    return {
+      success: true,
+      data: null,
+      message: 'Receiving address deleted successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Get('admin/receiving-addresses/qr')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiOperation({ summary: 'Get receiving addresses for QR upload (Admin)' })
+  async getReceivingAddressesForQr() {
+    const data = await this.bookingsService.getReceivingAddresses(true);
+
+    return {
+      success: true,
+      data,
+      message: 'Receiving addresses retrieved successfully',
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  @Post('admin/receiving-addresses/:id/qr')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.MANAGER)
+  @UseInterceptors(FileInterceptor('image'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Upload Binance QR image for receiving address (Admin/Manager)' })
+  async uploadReceivingAddressQr(
+    @Param('id') id: string,
+    @UploadedFile() image: Express.Multer.File,
+  ) {
+    const data = await this.bookingsService.uploadReceivingAddressQr(id, image);
+
+    return {
+      success: true,
+      data,
+      message: 'QR image uploaded successfully',
       timestamp: new Date().toISOString(),
     };
   }

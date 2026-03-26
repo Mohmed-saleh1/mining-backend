@@ -5,13 +5,14 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, EntityManager } from 'typeorm';
+import { Repository, EntityManager, In } from 'typeorm';
 import {
   Booking,
   BookingStatus,
   RentalDuration,
 } from './entities/booking.entity';
 import { BookingMessage, MessageType } from './entities/booking-message.entity';
+import { BookingReceivingAddress } from './entities/booking-receiving-address.entity';
 import { MiningMachine } from '../mining-machines/entities/mining-machine.entity';
 import { CreateBookingDto } from './dto/create-booking.dto';
 import {
@@ -20,8 +21,14 @@ import {
   MarkPaymentSentDto,
 } from './dto/update-booking.dto';
 import { CreateMessageDto } from './dto/create-message.dto';
+import {
+  CreateReceivingAddressDto,
+  UpdateReceivingAddressDto,
+} from './dto/receiving-address.dto';
 import { User } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 import { Subscription } from '../subscriptions/entities/subscription.entity';
+import { UploadService } from '../shared/services/upload.service';
 
 @Injectable()
 export class BookingsService {
@@ -30,10 +37,13 @@ export class BookingsService {
     private readonly bookingRepository: Repository<Booking>,
     @InjectRepository(BookingMessage)
     private readonly messageRepository: Repository<BookingMessage>,
+    @InjectRepository(BookingReceivingAddress)
+    private readonly receivingAddressRepository: Repository<BookingReceivingAddress>,
     @InjectRepository(MiningMachine)
     private readonly machineRepository: Repository<MiningMachine>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private readonly uploadService: UploadService,
     private readonly entityManager: EntityManager,
   ) {}
 
@@ -106,6 +116,11 @@ export class BookingsService {
       createDto.quantity,
     );
 
+    const activeReceivingAddresses = await this.receivingAddressRepository.find({
+      where: { isActive: true },
+      order: { createdAt: 'ASC' },
+    });
+
     const booking = this.bookingRepository.create({
       userId,
       machineId: createDto.machineId,
@@ -113,17 +128,42 @@ export class BookingsService {
       quantity: createDto.quantity,
       totalPrice,
       userNotes: createDto.userNotes,
-      status: BookingStatus.PENDING,
+      status:
+        activeReceivingAddresses.length > 0
+          ? BookingStatus.AWAITING_PAYMENT
+          : BookingStatus.PENDING,
+      paymentAddress:
+        activeReceivingAddresses.length > 0
+          ? activeReceivingAddresses[0].address
+          : undefined,
     });
 
     const savedBooking = await this.bookingRepository.save(booking);
 
-    // Create system message
+    const staffSenderId = await this.getStaffSenderId(userId);
+
     await this.createSystemMessage(
       savedBooking.id,
-      userId,
-      `Booking request created for ${machine.name}. Waiting for admin to provide payment address.`,
+      staffSenderId,
+      activeReceivingAddresses.length > 0
+        ? `Booking request created for ${machine.name}. Please send payment to one of the provided receiving addresses and upload your payment screenshot in chat.`
+        : `Booking request created for ${machine.name}. Waiting for admin to provide payment address.`,
     );
+
+    if (activeReceivingAddresses.length > 0) {
+      await this.messageRepository.save(
+        activeReceivingAddresses.map((item) => ({
+          bookingId: savedBooking.id,
+          senderId: staffSenderId,
+          content: item.address,
+          cryptoName: item.cryptoName,
+          networkType: item.networkType,
+          imageUrl: item.qrImageUrl,
+          messageType: MessageType.PAYMENT_ADDRESS,
+          isFromAdmin: true,
+        })),
+      );
+    }
 
     return this.findOne(savedBooking.id, userId);
   }
@@ -399,6 +439,29 @@ export class BookingsService {
     return this.messageRepository.save(message);
   }
 
+  async sendImageMessage(
+    bookingId: string,
+    senderId: string,
+    image: Express.Multer.File,
+    content?: string,
+    isAdmin: boolean = false,
+  ): Promise<BookingMessage> {
+    await this.findOne(bookingId, isAdmin ? undefined : senderId, isAdmin);
+
+    const imageUrl = await this.uploadService.uploadImage(image, 'bookings');
+
+    const message = this.messageRepository.create({
+      bookingId,
+      senderId,
+      content: content?.trim() || 'Payment proof screenshot',
+      imageUrl,
+      messageType: MessageType.IMAGE,
+      isFromAdmin: isAdmin,
+    });
+
+    return this.messageRepository.save(message);
+  }
+
   async getMessages(
     bookingId: string,
     userId: string,
@@ -447,6 +510,119 @@ export class BookingsService {
     });
 
     return this.messageRepository.save(message);
+  }
+
+  private async getStaffSenderId(fallbackUserId: string): Promise<string> {
+    const staffUser = await this.userRepository.findOne({
+      where: {
+        role: In([UserRole.ADMIN, UserRole.MANAGER]),
+      },
+      order: { createdAt: 'ASC' },
+      select: ['id'],
+    });
+
+    return staffUser?.id || fallbackUserId;
+  }
+
+  async getReceivingAddresses(
+    includeInactive: boolean = false,
+  ): Promise<BookingReceivingAddress[]> {
+    return this.receivingAddressRepository.find({
+      where: includeInactive ? {} : { isActive: true },
+      order: { createdAt: 'ASC' },
+      relations: ['createdBy'],
+    });
+  }
+
+  async createReceivingAddress(
+    createdById: string,
+    dto: CreateReceivingAddressDto,
+  ): Promise<BookingReceivingAddress> {
+    const entity = this.receivingAddressRepository.create({
+      cryptoName: dto.cryptoName.trim(),
+      networkType: dto.networkType.trim(),
+      address: dto.address.trim(),
+      isActive: dto.isActive ?? true,
+      createdById,
+    });
+
+    return this.receivingAddressRepository.save(entity);
+  }
+
+  async updateReceivingAddress(
+    id: string,
+    dto: UpdateReceivingAddressDto,
+  ): Promise<BookingReceivingAddress> {
+    const existing = await this.receivingAddressRepository.findOne({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Receiving address not found');
+    }
+
+    if (dto.cryptoName !== undefined) {
+      existing.cryptoName = dto.cryptoName.trim();
+    }
+    if (dto.networkType !== undefined) {
+      existing.networkType = dto.networkType.trim();
+    }
+    if (dto.address !== undefined) {
+      existing.address = dto.address.trim();
+    }
+    if (dto.isActive !== undefined) {
+      existing.isActive = dto.isActive;
+    }
+
+    await this.receivingAddressRepository.save(existing);
+    return existing;
+  }
+
+  async removeReceivingAddress(id: string): Promise<void> {
+    const existing = await this.receivingAddressRepository.findOne({
+      where: { id },
+      select: ['id', 'qrImageUrl'],
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Receiving address not found');
+    }
+
+    if (existing.qrImageUrl) {
+      try {
+        await this.uploadService.deleteImageByUrl(existing.qrImageUrl);
+      } catch {
+        // Keep deletion non-blocking if storage cleanup fails.
+      }
+    }
+
+    await this.receivingAddressRepository.delete(id);
+  }
+
+  async uploadReceivingAddressQr(
+    id: string,
+    image: Express.Multer.File,
+  ): Promise<BookingReceivingAddress> {
+    const existing = await this.receivingAddressRepository.findOne({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Receiving address not found');
+    }
+
+    const qrImageUrl = await this.uploadService.uploadImage(image, 'bookings/qr');
+
+    if (existing.qrImageUrl) {
+      try {
+        await this.uploadService.deleteImageByUrl(existing.qrImageUrl);
+      } catch {
+        // Do not fail the request because of old image cleanup.
+      }
+    }
+
+    existing.qrImageUrl = qrImageUrl;
+    return this.receivingAddressRepository.save(existing);
   }
 
   async getStatistics(): Promise<{

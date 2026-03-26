@@ -12,6 +12,7 @@ import { Booking } from './booking.entity';
 export enum MessageType {
   TEXT = 'text',
   PAYMENT_ADDRESS = 'payment_address',
+  IMAGE = 'image',
   SYSTEM = 'system',
 }
 
@@ -38,6 +39,15 @@ export class BookingMessage {
 
   @Column({ type: 'text' })
   content: string;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  networkType: string | null;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  cryptoName: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  imageUrl: string | null;
 
   @Column({
     type: 'enum',

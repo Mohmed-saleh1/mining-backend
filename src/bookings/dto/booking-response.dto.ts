@@ -46,6 +46,15 @@ export class BookingMessageResponseDto {
   @ApiProperty()
   content: string;
 
+  @ApiPropertyOptional()
+  networkType?: string;
+
+  @ApiPropertyOptional()
+  cryptoName?: string;
+
+  @ApiPropertyOptional()
+  imageUrl?: string;
+
   @ApiProperty({ enum: MessageType })
   messageType: MessageType;
 
@@ -57,6 +66,35 @@ export class BookingMessageResponseDto {
 
   @ApiProperty()
   createdAt: Date;
+}
+
+export class BookingReceivingAddressDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  networkType: string;
+
+  @ApiPropertyOptional()
+  cryptoName?: string;
+
+  @ApiProperty()
+  address: string;
+
+  @ApiPropertyOptional()
+  qrImageUrl?: string;
+
+  @ApiProperty()
+  isActive: boolean;
+
+  @ApiProperty()
+  createdById: string;
+
+  @ApiProperty()
+  createdAt: Date;
+
+  @ApiProperty()
+  updatedAt: Date;
 }
 
 export class BookingResponseDto {
