@@ -325,9 +325,14 @@ export class BookingsService {
   ): Promise<Booking> {
     const booking = await this.findOne(bookingId, undefined, true);
 
-    if (booking.status !== BookingStatus.PAYMENT_SENT) {
+    const approvableStatuses = [
+      BookingStatus.PENDING,
+      BookingStatus.AWAITING_PAYMENT,
+      BookingStatus.PAYMENT_SENT,
+    ];
+    if (!approvableStatuses.includes(booking.status)) {
       throw new BadRequestException(
-        'Can only approve bookings with payment sent',
+        'Can only approve bookings that are pending, awaiting payment, or payment sent',
       );
     }
 
